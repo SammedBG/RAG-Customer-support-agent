@@ -7,9 +7,7 @@ Each node reads from and writes to this state.
 
 from __future__ import annotations
 
-from typing import Any, Optional
-
-from typing_extensions import TypedDict
+from typing import Any, Optional, TypedDict
 
 
 class Citation(TypedDict):

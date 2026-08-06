@@ -15,8 +15,6 @@ from typing import Optional
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
     Distance,
-    NamedSparseVector,
-    NamedVector,
     PointStruct,
     SparseIndexParams,
     SparseVector,

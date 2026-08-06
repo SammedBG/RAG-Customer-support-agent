@@ -7,9 +7,10 @@ Defines the state machine that orchestrates the RAG pipeline:
                direct → generate → END                              fallback → END
 """
 
-from __future__ import annotations
+from typing import Any, cast
 
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from config.logging_config import get_logger
 from src.agent.nodes import (
@@ -51,7 +52,7 @@ def _check_grounded(state: AgentState) -> str:
     return "not_grounded"
 
 
-def build_graph() -> StateGraph:
+def build_graph() -> CompiledStateGraph:
     """
     Build and compile the LangGraph RAG agent.
 
@@ -69,7 +70,7 @@ def build_graph() -> StateGraph:
     """
     logger.info("building_rag_graph")
 
-    graph = StateGraph(AgentState)
+    graph = StateGraph(cast(Any, AgentState))
 
     # ── Add nodes ────────────────────────────────────────────
     graph.add_node("route_query", route_query)
@@ -189,4 +190,4 @@ def invoke_agent(
         had_error=result.get("error") is not None,
     )
 
-    return result
+    return cast(AgentState, result)

@@ -15,8 +15,6 @@ from qdrant_client.http.models import (
     FieldCondition,
     Filter,
     MatchValue,
-    NamedSparseVector,
-    NamedVector,
     Prefetch,
     Query,
     QueryRequest,

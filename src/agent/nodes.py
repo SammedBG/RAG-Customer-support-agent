@@ -84,7 +84,8 @@ def route_query(state: AgentState) -> dict[str, Any]:
     prompt = ROUTER_PROMPT.format(query=query)
 
     response = llm.invoke(prompt)
-    decision = response.content.strip().lower()
+    content_str = response.content if isinstance(response.content, str) else str(response.content)
+    decision = content_str.strip().lower()
 
     # Normalize decision
     if "retrieve" in decision:
@@ -161,7 +162,8 @@ def grade_documents(state: AgentState) -> dict[str, Any]:
         )
 
         response = llm.invoke(prompt)
-        grade = response.content.strip().lower()
+        content_str = response.content if isinstance(response.content, str) else str(response.content)
+        grade = content_str.strip().lower()
 
         if "yes" in grade:
             filtered_docs.append(doc)
@@ -200,8 +202,9 @@ def generate(state: AgentState) -> dict[str, Any]:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ])
+        gen_text = str(response.content)
         return {
-            "generation": response.content,
+            "generation": gen_text,
             "citations": [],
             "confidence": 0.5 if route == "direct" else 0.2,
         }
@@ -232,6 +235,7 @@ def generate(state: AgentState) -> dict[str, Any]:
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": prompt},
     ])
+    gen_text = str(response.content)
 
     # Calculate confidence based on retrieval scores
     avg_score = sum(doc.get("score", 0) for doc in filtered_docs) / len(filtered_docs)
@@ -239,13 +243,13 @@ def generate(state: AgentState) -> dict[str, Any]:
 
     logger.info(
         "answer_generated",
-        answer_len=len(response.content),
+        answer_len=len(gen_text),
         citations=len(citations),
         confidence=round(confidence, 2),
     )
 
     return {
-        "generation": response.content,
+        "generation": gen_text,
         "citations": citations,
         "confidence": confidence,
     }
@@ -283,7 +287,8 @@ def check_hallucination(state: AgentState) -> dict[str, Any]:
     )
 
     response = llm.invoke(prompt)
-    result = response.content.strip().lower()
+    content_str = response.content if isinstance(response.content, str) else str(response.content)
+    result = content_str.strip().lower()
 
     is_grounded = "grounded" in result and "not_grounded" not in result
 

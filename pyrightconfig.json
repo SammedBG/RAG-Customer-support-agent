@@ -1,0 +1,11 @@
+{
+  "include": [
+    "src",
+    "config",
+    "scripts",
+    "tests"
+  ],
+  "extraPaths": [
+    "."
+  ]
+}
