@@ -1,0 +1,55 @@
+# === Environment & Secrets ===
+.env
+.env.local
+.env.production
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.env.example
+
+# === Node / React ===
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+data/sample_docs/   
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Qdrant Data ===
+qdrant_data/
+
+# === Logs ===
+logs/
+*.log
+
+# === Testing ===
+.coverage
+htmlcov/
+.pytest_cache/
+.deepeval/
+
+# === mypy ===
+.mypy_cache/
+
+# === ruff ===
+.ruff_cache/

@@ -1,0 +1,102 @@
+[
+  {
+    "question": "What is the return policy for TechNova products?",
+    "ground_truth": "TechNova offers a 30-day money-back guarantee from the date of delivery. Products must be in original packaging with all accessories included and in resellable condition.",
+    "expected_sources": ["refund_policy.md"]
+  },
+  {
+    "question": "How much does overnight shipping cost?",
+    "ground_truth": "Overnight shipping costs $24.99 with next business day delivery via UPS Next Day Air. Orders must be placed before 12PM EST to ship same day.",
+    "expected_sources": ["shipping_guide.md"]
+  },
+  {
+    "question": "What should I do if my SmartHome Hub won't connect to Wi-Fi?",
+    "ground_truth": "Check your router, verify 2.4GHz band (Hub Lite only supports 2.4GHz), move within 10 meters of router, reset network settings via app or reset button for 5 seconds, check MAC address filtering, and try changing router Wi-Fi channel.",
+    "expected_sources": ["troubleshooting.md"]
+  },
+  {
+    "question": "What are the different SmartHome Hub models and their prices?",
+    "ground_truth": "There are three models: SmartHome Hub Lite ($79.99, up to 50 devices), SmartHome Hub Pro ($149.99, up to 200 devices), and SmartHome Hub Enterprise ($299.99, unlimited devices).",
+    "expected_sources": ["product_faq.md"]
+  },
+  {
+    "question": "How long does it take to get a refund on my credit card?",
+    "ground_truth": "Credit/debit card refunds take 5-7 business days. PayPal refunds take 3-5 business days. Store credit is instant.",
+    "expected_sources": ["refund_policy.md"]
+  },
+  {
+    "question": "Does the SmartHome Hub work with Alexa?",
+    "ground_truth": "Yes, all SmartHome Hub models are compatible with Amazon Alexa, Google Assistant, and Apple HomeKit. The Pro and Enterprise models also include a built-in voice assistant called NovaVoice.",
+    "expected_sources": ["product_faq.md"]
+  },
+  {
+    "question": "What does a solid red LED mean on my hub?",
+    "ground_truth": "A solid red LED indicates a critical error. You should check the Error Codes reference in the troubleshooting guide and contact support.",
+    "expected_sources": ["troubleshooting.md"]
+  },
+  {
+    "question": "Can I ship to Australia and who pays the import duties?",
+    "ground_truth": "Yes, shipping to Australia and New Zealand costs $24.99 with 14-21 business day delivery. Import duties and taxes are NOT included (DDU - Delivered Duty Unpaid), meaning the customer pays at delivery.",
+    "expected_sources": ["shipping_guide.md"]
+  },
+  {
+    "question": "What items cannot be returned?",
+    "ground_truth": "Non-returnable items include gift cards, customized/engraved products, software licenses once activated, and clearance items marked as Final Sale.",
+    "expected_sources": ["refund_policy.md"]
+  },
+  {
+    "question": "How do I factory reset my SmartHome Hub?",
+    "ground_truth": "You can factory reset via the app (Settings > System > Advanced > Factory Reset) or by pressing and holding the reset button for 15 seconds until the LED turns purple. Warning: this erases ALL data, settings, device pairings, and automations.",
+    "expected_sources": ["troubleshooting.md"]
+  },
+  {
+    "question": "What protocols does the SmartHome Hub Pro support?",
+    "ground_truth": "The SmartHome Hub Pro supports Zigbee, Z-Wave, Wi-Fi, Bluetooth 5.0, and Thread protocols, making it compatible with over 5,000 smart home devices from 200+ brands.",
+    "expected_sources": ["product_faq.md"]
+  },
+  {
+    "question": "My automations aren't triggering. What could be wrong?",
+    "ground_truth": "Check if the automation is enabled, verify trigger conditions and timezone settings, ensure trigger and action devices are online, check automation limit (free accounts limited to 10), look for conflicts, and check NovaFlow execution logs.",
+    "expected_sources": ["troubleshooting.md"]
+  },
+  {
+    "question": "How do I track my order?",
+    "ground_truth": "Visit technova.com/track and enter your order number or tracking number to view real-time location and estimated delivery date.",
+    "expected_sources": ["shipping_guide.md"]
+  },
+  {
+    "question": "Can I get a refund on my annual TechNova Premium subscription?",
+    "ground_truth": "Annual plans ($99.99/year) offer a pro-rated refund for unused months if cancelled within the first 6 months. Monthly plans can be cancelled anytime with no refund for the current billing period.",
+    "expected_sources": ["refund_policy.md"]
+  },
+  {
+    "question": "What smart lock brands are compatible with the hub?",
+    "ground_truth": "Supported smart lock brands include August (all models), Yale (Assure Lock series), Schlage (Encode series), Kwikset (Halo series), Level (Bolt and Lock), and Nuki (Smart Lock 3.0+).",
+    "expected_sources": ["product_faq.md"]
+  },
+  {
+    "question": "What happens if my package shows delivered but I didn't receive it?",
+    "ground_truth": "Wait 24 hours, check with neighbors and around your property, check with building management. Contact TechNova within 7 days and they'll file a carrier claim and send a replacement or full refund, typically resolved within 5 business days.",
+    "expected_sources": ["shipping_guide.md"]
+  },
+  {
+    "question": "What is the error code E501?",
+    "ground_truth": "Error code E501 is a Performance category error indicating High CPU usage with Medium severity. Solutions include checking device count, clearing cache, looking for runaway automations, checking network bandwidth, and disabling unused integrations.",
+    "expected_sources": ["troubleshooting.md"]
+  },
+  {
+    "question": "Do orders over $200 require a signature?",
+    "ground_truth": "Yes, orders over $200 require a signature at delivery. You can authorize 'signature not required' through your account settings. If not available, the carrier will make 3 delivery attempts.",
+    "expected_sources": ["shipping_guide.md"]
+  },
+  {
+    "question": "What product arrived damaged, what should I do?",
+    "ground_truth": "Do not discard the packaging or product. Take photos of the damage. Contact TechNova within 48 hours of delivery. They will send a free replacement via expedited shipping and arrange carrier pickup of the damaged item at no cost.",
+    "expected_sources": ["refund_policy.md"]
+  },
+  {
+    "question": "How often are software updates released for the SmartHome Hub?",
+    "ground_truth": "Security patches are released within 48 hours of discovery, feature updates are monthly (third Tuesday), and major versions are annual (typically September). All updates are free and automatic.",
+    "expected_sources": ["product_faq.md"]
+  }
+]
