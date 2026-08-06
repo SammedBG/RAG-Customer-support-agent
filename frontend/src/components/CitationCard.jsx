@@ -8,9 +8,7 @@ export default function CitationCard({ citation }) {
     relevance_score >= 0.8 ? 'high' :
     relevance_score >= 0.5 ? 'medium' : 'low';
 
-  const scoreLabel =
-    relevance_score >= 0.8 ? 'High' :
-    relevance_score >= 0.5 ? 'Medium' : 'Low';
+  const scorePercentage = (relevance_score * 100).toFixed(0);
 
   return (
     <div
@@ -20,7 +18,7 @@ export default function CitationCard({ citation }) {
       <div className="citation-card-header">
         <span className="citation-source">{source}</span>
         <span className={`citation-score ${scoreLevel}`}>
-          {scoreLabel} ({(relevance_score * 100).toFixed(0)}%)
+          Match {scorePercentage}%
         </span>
       </div>
       <div className="citation-text">

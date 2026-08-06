@@ -23,7 +23,7 @@ from qdrant_client.http.models import (
 )
 
 from config.logging_config import get_logger
-from config.settings import get_settings
+from config.settings import get_qdrant_client, get_settings
 from src.ingestion.chunker import chunk_documents
 from src.ingestion.embedder import DenseEmbedder, SparseEmbedder
 from src.ingestion.loader import load_documents
@@ -52,11 +52,8 @@ class IngestionPipeline:
     ):
         settings = get_settings()
 
-        # Initialize Qdrant client
-        self.qdrant = qdrant_client or QdrantClient(
-            url=settings.qdrant_url,
-            api_key=settings.qdrant_api_key or None,
-        )
+        # Initialize Qdrant client (with automatic embedded local fallback if Docker/Server is not running)
+        self.qdrant = qdrant_client or get_qdrant_client()
         self.collection_name = settings.qdrant_collection_name
 
         # Initialize embedders

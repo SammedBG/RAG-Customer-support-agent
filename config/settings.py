@@ -24,8 +24,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── OpenAI ──────────────────────────────────────────────────
-    openai_api_key: str = Field(..., description="OpenAI API key")
+    # ── Groq & OpenAI ──────────────────────────────────────────
+    groq_api_key: Optional[str] = Field(default=None, description="Groq API key")
+    groq_chat_model: str = Field(
+        default="llama-3.3-70b-versatile",
+        description="Groq chat model name",
+    )
+    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
     openai_embedding_model: str = Field(
         default="text-embedding-3-small",
         description="OpenAI embedding model name",
@@ -119,3 +124,23 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Cached settings singleton. Call this to access configuration."""
     return Settings()
+
+
+def get_qdrant_client(url: Optional[str] = None, api_key: Optional[str] = None):
+    """
+    Get a QdrantClient instance with automatic local fallback.
+    First tries remote connection (Docker/Server).
+    If remote is unavailable, falls back to embedded local storage ('data/qdrant_storage').
+    """
+    from qdrant_client import QdrantClient
+
+    settings = get_settings()
+    target_url = url or settings.qdrant_url
+    target_key = api_key or settings.qdrant_api_key or None
+
+    try:
+        client = QdrantClient(url=target_url, api_key=target_key, timeout=3)
+        client.get_collections()
+        return client
+    except Exception:
+        return QdrantClient(path="data/qdrant_storage")

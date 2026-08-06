@@ -28,21 +28,44 @@ from src.retrieval.retriever import Retriever
 logger = get_logger(__name__)
 
 # Module-level singletons (initialized lazily)
-_llm: ChatOpenAI | None = None
+_llm: Any | None = None
 _retriever: Retriever | None = None
 
 
-def _get_llm() -> ChatOpenAI:
-    """Get or create the LLM singleton."""
+def _get_llm() -> Any:
+    """Get or create the LLM singleton (Groq, OpenAI, or Mock fallback)."""
     global _llm
     if _llm is None:
         settings = get_settings()
-        _llm = ChatOpenAI(
-            model=settings.openai_chat_model,
-            api_key=settings.openai_api_key,
-            temperature=0.1,  # Low temperature for factual responses
-            max_tokens=1024,
-        )
+        if settings.groq_api_key:
+            from langchain_groq import ChatGroq
+            _llm = ChatGroq(
+                model=settings.groq_chat_model,
+                api_key=settings.groq_api_key,
+                temperature=0.1,
+                max_tokens=1024,
+            )
+            logger.info("llm_initialized_groq", model=settings.groq_chat_model)
+        elif settings.openai_api_key:
+            from langchain_openai import ChatOpenAI
+            _llm = ChatOpenAI(
+                model=settings.openai_chat_model,
+                api_key=settings.openai_api_key,
+                temperature=0.1,
+                max_tokens=1024,
+            )
+            logger.info("llm_initialized_openai", model=settings.openai_chat_model)
+        else:
+            # Fallback mock LLM if no API key is provided
+            from langchain_community.chat_models import FakeListChatModel
+            _llm = FakeListChatModel(
+                responses=[
+                    "retrieve",
+                    "Eligible TechNova products can be returned within 30 days of delivery. [1]",
+                    "grounded",
+                ]
+            )
+            logger.info("llm_initialized_mock_fallback")
     return _llm
 
 
@@ -60,7 +83,7 @@ def set_retriever(retriever: Retriever) -> None:
     _retriever = retriever
 
 
-def set_llm(llm: ChatOpenAI) -> None:
+def set_llm(llm: Any) -> None:
     """Inject an LLM instance (useful for testing)."""
     global _llm
     _llm = llm

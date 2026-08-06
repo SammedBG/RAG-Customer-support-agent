@@ -98,7 +98,7 @@ def main():
 
     # Run RAGAS evaluation
     if args.ragas:
-        print("\n📊 Running RAGAS evaluation...")
+        print("\n[EVAL] Running RAGAS evaluation...")
         from src.evaluation.ragas_eval import run_ragas_evaluation
 
         ragas_scores = run_ragas_evaluation(eval_data, output_path=args.output)
@@ -112,7 +112,7 @@ def main():
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, default=str)
 
-    print(f"\n📄 Report saved to: {args.output}")
+    print(f"\n[INFO] Report saved to: {args.output}")
 
     # Print summary
     print("\n" + "=" * 60)
@@ -120,7 +120,7 @@ def main():
     print("=" * 60)
     for metric, score in report["metrics"].items():
         if isinstance(score, (int, float)):
-            status = "✅" if score >= 0.7 else "⚠️" if score >= 0.5 else "❌"
+            status = "[OK]" if score >= 0.7 else "[WARN]" if score >= 0.5 else "[FAIL]"
             print(f"  {status} {metric}: {score:.3f}")
 
 

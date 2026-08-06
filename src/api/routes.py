@@ -203,9 +203,7 @@ async def ingest_documents(
 )
 async def health_check():
     """Check overall system health."""
-    from qdrant_client import QdrantClient
-
-    from config.settings import get_settings
+    from config.settings import get_qdrant_client, get_settings
 
     settings = get_settings()
 
@@ -214,11 +212,7 @@ async def health_check():
     doc_count = 0
 
     try:
-        client = QdrantClient(
-            url=settings.qdrant_url,
-            api_key=settings.qdrant_api_key or None,
-            timeout=5,
-        )
+        client = get_qdrant_client()
 
         # Check connectivity
         collections = client.get_collections()

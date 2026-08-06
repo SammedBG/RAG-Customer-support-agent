@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CitationCard from './CitationCard';
 import ConfidenceBadge from './ConfidenceBadge';
 import { formatTime } from '../utils/formatters';
@@ -10,7 +10,7 @@ export default function MessageBubble({ message }) {
   return (
     <div className={`message ${role}`}>
       <div className="message-avatar">
-        {isUser ? '👤' : 'TN'}
+        {isUser ? 'U' : 'TN'}
       </div>
       <div className="message-content">
         <div dangerouslySetInnerHTML={{ __html: formatMarkdown(content) }} />
@@ -31,7 +31,7 @@ export default function MessageBubble({ message }) {
 }
 
 function CitationSection({ citations }) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="citations-section">
@@ -40,7 +40,7 @@ function CitationSection({ citations }) {
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={`citations-toggle ${isOpen ? 'open' : ''}`}>▶</span>
-        <span>📚 {citations.length} Source{citations.length !== 1 ? 's' : ''} Cited</span>
+        <span>{citations.length} Verified Source{citations.length !== 1 ? 's' : ''}</span>
       </div>
       {isOpen && (
         <div className="citations-list">
@@ -57,24 +57,14 @@ function formatMarkdown(text) {
   if (!text) return '';
 
   let html = text
-    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Inline code
     .replace(/`(.*?)`/g, '<code>$1</code>')
-    // Line breaks → paragraphs
     .replace(/\n\n/g, '</p><p>')
-    // Single line breaks
     .replace(/\n/g, '<br/>')
-    // Bullet lists
     .replace(/(?:^|\n)- (.*?)(?=\n|$)/g, '<li>$1</li>');
 
-  // Wrap in paragraph
   html = `<p>${html}</p>`;
-
-  // Wrap consecutive <li> in <ul>
   html = html.replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>');
-
-  // Clean up empty paragraphs
   html = html.replace(/<p>\s*<\/p>/g, '');
 
   return html;

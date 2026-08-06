@@ -21,44 +21,44 @@ logger = get_logger(__name__)
 
 
 class DenseEmbedder:
-    """Generate dense embeddings using OpenAI's embedding API."""
+    """Generate dense embeddings using OpenAI API or local FastEmbed model fallback."""
 
     def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         settings = get_settings()
+        self.api_key = api_key or settings.openai_api_key
         self.model = model or settings.openai_embedding_model
-        self.client = OpenAI(api_key=api_key or settings.openai_api_key)
-        logger.info("dense_embedder_initialized", model=self.model)
+
+        if self.api_key:
+            self.client = OpenAI(api_key=self.api_key)
+            self.local_model = None
+            logger.info("dense_embedder_initialized_openai", model=self.model)
+        else:
+            self.client = None
+            self.local_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+            logger.info("dense_embedder_initialized_fastembed_fallback", model="BAAI/bge-small-en-v1.5")
 
     def embed_texts(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
-        """
-        Generate dense embeddings for a list of texts.
+        if self.local_model:
+            embeddings_generator = self.local_model.embed(texts)
+            return [emb.tolist() for emb in embeddings_generator]
 
-        Args:
-            texts: List of text strings to embed.
-            batch_size: Number of texts to process per API call.
-
-        Returns:
-            List of embedding vectors (each a list of floats).
-        """
         all_embeddings: list[list[float]] = []
-
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
-            logger.debug("embedding_batch", batch_start=i, batch_size=len(batch))
-
             response = self.client.embeddings.create(
                 input=batch,
                 model=self.model,
             )
-
             batch_embeddings = [item.embedding for item in response.data]
             all_embeddings.extend(batch_embeddings)
 
-        logger.info("dense_embeddings_generated", count=len(all_embeddings))
         return all_embeddings
 
     def embed_query(self, query: str) -> list[float]:
-        """Generate a dense embedding for a single query."""
+        if self.local_model:
+            embeddings_generator = self.local_model.embed([query])
+            return next(embeddings_generator).tolist()
+
         response = self.client.embeddings.create(
             input=[query],
             model=self.model,

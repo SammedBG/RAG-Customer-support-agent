@@ -67,10 +67,10 @@ def main():
         print(f"  Points upserted:     {result.get('points_upserted', 0)}")
 
     except FileNotFoundError as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] File not found: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Ingestion failed: {e}")
         raise
 
 

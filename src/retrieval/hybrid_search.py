@@ -23,7 +23,7 @@ from qdrant_client.http.models import (
 )
 
 from config.logging_config import get_logger
-from config.settings import get_settings
+from config.settings import get_qdrant_client, get_settings
 from src.ingestion.embedder import DenseEmbedder, SparseEmbedder
 
 logger = get_logger(__name__)
@@ -62,10 +62,7 @@ class HybridSearcher:
         sparse_embedder: Optional[SparseEmbedder] = None,
     ):
         settings = get_settings()
-        self.qdrant = qdrant_client or QdrantClient(
-            url=settings.qdrant_url,
-            api_key=settings.qdrant_api_key or None,
-        )
+        self.qdrant = qdrant_client or get_qdrant_client()
         self.collection_name = settings.qdrant_collection_name
         self.dense_embedder = dense_embedder or DenseEmbedder()
         self.sparse_embedder = sparse_embedder or SparseEmbedder()

@@ -3,12 +3,12 @@ import MessageBubble from './MessageBubble';
 import LoadingDots from './LoadingDots';
 
 const SUGGESTIONS = [
-  "What is the return policy?",
-  "How much does shipping cost?",
-  "My hub won't connect to Wi-Fi",
-  "What SmartHome Hub models are available?",
+  "What is the return policy for TechNova products?",
+  "How much does overnight shipping cost?",
+  "My SmartHome Hub won't connect to Wi-Fi",
+  "What are the different SmartHome Hub models and prices?",
   "How do I track my order?",
-  "What does a red LED mean?",
+  "What does a solid red LED mean on my hub?",
 ];
 
 export default function ChatWindow({ messages, isLoading, onSuggestionClick }) {
@@ -22,11 +22,11 @@ export default function ChatWindow({ messages, isLoading, onSuggestionClick }) {
     return (
       <div className="chat-window">
         <div className="empty-state">
-          <div className="empty-state-icon">🤖</div>
-          <h2>How can I help you today?</h2>
+          <div className="empty-state-icon">🛡️</div>
+          <h2>Enterprise Support Assistant</h2>
           <p>
-            I'm TechNova's AI support agent. Ask me about products, shipping,
-            returns, or troubleshooting — I'll find the answer with sources.
+            Ask questions about TechNova products, policies, hardware troubleshooting, or shipping.
+            Answers are grounded in official documentation with verified source citations.
           </p>
           <div className="empty-state-suggestions">
             {SUGGESTIONS.map((s) => (
