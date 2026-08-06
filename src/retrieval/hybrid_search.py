@@ -14,9 +14,10 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
     FieldCondition,
     Filter,
+    Fusion,
+    FusionQuery,
     MatchValue,
     Prefetch,
-    Query,
     QueryRequest,
     SparseVector,
 )
@@ -140,7 +141,7 @@ class HybridSearcher:
         results = self.qdrant.query_points(
             collection_name=self.collection_name,
             prefetch=[prefetch_dense, prefetch_sparse],
-            query=Query(fusion="rrf"),
+            query=FusionQuery(fusion=Fusion.RRF),
             limit=top_k,
             with_payload=True,
         )
@@ -154,11 +155,16 @@ class HybridSearcher:
             if score < score_threshold:
                 continue
 
+            text_val = str(payload.get("text") or "")
+            parent_text_val = str(payload.get("parent_text") or payload.get("text") or "")
+            source_file_val = str(payload.get("source_file") or "unknown")
+            source_path_val = str(payload.get("source_path") or "")
+
             chunk = RetrievedChunk(
-                text=payload.get("text", ""),
-                parent_text=payload.get("parent_text", payload.get("text", "")),
-                source_file=payload.get("source_file", "unknown"),
-                source_path=payload.get("source_path", ""),
+                text=text_val,
+                parent_text=parent_text_val,
+                source_file=source_file_val,
+                source_path=source_path_val,
                 score=score,
                 chunk_id=str(point.id),
                 metadata={
