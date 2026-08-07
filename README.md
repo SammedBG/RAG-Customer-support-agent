@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
   <img src="https://img.shields.io/badge/LangGraph-Agentic-FF6F00?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Qdrant-Hybrid_Search-DC382D?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
@@ -28,6 +29,7 @@ A production-grade Retrieval-Augmented Generation (RAG) agent built to answer cu
 - [Security](#security)
 - [Frontend](#frontend)
 - [Testing](#testing)
+- [CI/CD & Workflows](#cicd--workflows)
 - [Docker Deployment](#docker-deployment)
 - [License](#license)
 
@@ -564,6 +566,132 @@ docker compose logs -f api
 | `frontend` | `rag-frontend` | `3000` | React app (Nginx) |
 
 > **Local development:** You don't need Docker at all. Qdrant runs in embedded mode (`data/qdrant_storage/`), the API runs via `uvicorn`, and the frontend via `vite dev`.
+
+---
+
+## CI/CD & Workflows
+
+The project ships with **3 GitHub Actions workflows** in [`.github/workflows/`](.github/workflows/) covering the full development lifecycle:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CI/CD PIPELINE                               │
+│                                                                     │
+│  Push / PR to main                                                  │
+│       │                                                             │
+│       ▼                                                             │
+│  ┌─────────────────── CI Workflow ───────────────────┐              │
+│  │                                                   │              │
+│  │  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │              │
+│  │  │   Lint   │  │ Security │  │    Frontend    │  │              │
+│  │  │  Ruff    │  │   Scan   │  │     Build      │  │              │
+│  │  │  MyPy    │  │ pip audit│  │   npm ci +     │  │              │
+│  │  └────┬─────┘  └──────────┘  │   vite build   │  │              │
+│  │       │                      └────────────────┘  │              │
+│  │       ▼                                          │              │
+│  │  ┌──────────┐                                    │              │
+│  │  │  Tests   │                                    │              │
+│  │  │ pytest   │                                    │              │
+│  │  │ coverage │                                    │              │
+│  │  └──────────┘                                    │              │
+│  └──────────────────────────────────────────────────┘              │
+│       │ (on main only)                                              │
+│       ▼                                                             │
+│  ┌─────────────────── CD Workflow ───────────────────┐              │
+│  │                                                   │              │
+│  │  ┌─────────────┐    ┌─────────────────┐          │              │
+│  │  │ Build API   │    │ Build Frontend  │          │              │
+│  │  │ Docker img  │    │ Docker image    │          │              │
+│  │  │ → Push GHCR │    │ → Push GHCR     │          │              │
+│  │  └──────┬──────┘    └───────┬─────────┘          │              │
+│  │         └────────┬──────────┘                    │              │
+│  │                  ▼                               │              │
+│  │         ┌────────────────┐                       │              │
+│  │         │ Deploy Staging │                       │              │
+│  │         │ SSH + compose  │                       │              │
+│  │         │ + smoke test   │                       │              │
+│  │         └────────────────┘                       │              │
+│  └──────────────────────────────────────────────────┘              │
+│                                                                     │
+│  ┌─────────── Evaluation Workflow (Weekly / Manual) ─┐              │
+│  │  Ingest docs → RAGAS eval → DeepEval tests       │              │
+│  │  Upload metrics as artifacts (90-day retention)   │              │
+│  └───────────────────────────────────────────────────┘              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Workflow 1: CI (`ci.yml`)
+
+**Triggers:** Every push and PR to `main` / `develop`
+
+| Job | What It Does | Blocking? |
+|-----|-------------|:---------:|
+| **Lint & Type Check** | Runs `ruff check`, `ruff format --check`, and `mypy` on all Python code | ✅ (MyPy advisory) |
+| **Unit Tests** | Runs `pytest` with coverage report — uploads XML artifacts | ✅ |
+| **Security Scan** | Ruff security rules (`S` / bandit-equivalent) + `pip audit` for known CVEs | ⚠️ Advisory |
+| **Frontend Build** | `npm ci` + `vite build` — ensures the React app compiles cleanly | ✅ |
+
+### Workflow 2: CD (`cd.yml`)
+
+**Triggers:** Push to `main` only (skips docs-only changes)
+
+| Job | What It Does |
+|-----|--------------|
+| **CI Gate** | Re-runs the full CI workflow as a prerequisite |
+| **Build API Image** | Builds the FastAPI Docker image, pushes to GitHub Container Registry (GHCR) with `latest` + SHA tags |
+| **Build Frontend Image** | Builds the React/Nginx Docker image, pushes to GHCR |
+| **Deploy to Staging** | SSHs into the staging server, pulls new images, runs `docker compose up`, re-ingests documents, and runs a health check smoke test |
+
+### Workflow 3: Evaluation (`evaluation.yml`)
+
+**Triggers:** Weekly schedule (Mondays 3 AM UTC) + manual dispatch
+
+| Job | What It Does |
+|-----|--------------|
+| **Run RAGAS Evaluation** | Ingests documents, runs the full RAGAS evaluation suite (faithfulness, relevancy, precision, recall) against the 20-pair golden dataset |
+| **Run DeepEval Tests** | Executes DeepEval test cases for CI/CD quality gates |
+| **Upload Results** | Stores evaluation metrics as build artifacts (90-day retention) for trend tracking |
+
+### Required Secrets & Variables
+
+Configure these in your GitHub repository settings (`Settings → Secrets and variables → Actions`):
+
+**Secrets:**
+
+| Secret | Used By | Description |
+|--------|---------|-------------|
+| `GROQ_API_KEY` | CD, Evaluation | Groq API key for LLM inference |
+| `OPENAI_API_KEY` | Evaluation | OpenAI key (for RAGAS metrics that require it) |
+| `DEPLOY_USER` | CD | SSH username for staging server |
+| `DEPLOY_SSH_KEY` | CD | SSH private key for staging server |
+
+**Environment Variables:**
+
+| Variable | Environment | Description |
+|----------|------------|-------------|
+| `STAGING_HOST` | `staging` | Hostname/IP of the staging server |
+| `STAGING_URL` | `staging` | Public URL of the staging deployment |
+| `APP_DIR` | `staging` | Path to the app directory on the server |
+
+### Running Workflows Locally
+
+You can test the CI steps locally before pushing:
+
+```bash
+# Lint
+ruff check src/ tests/ config/ scripts/
+ruff format --check src/ tests/ config/ scripts/
+
+# Tests
+pytest tests/ -v --cov=src --cov-report=term-missing
+
+# Security
+ruff check src/ --select S --statistics
+pip audit
+
+# Frontend build
+cd frontend && npm ci && npm run build
+```
 
 ---
 
