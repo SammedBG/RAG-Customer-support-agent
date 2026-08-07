@@ -27,7 +27,7 @@ export default function Navbar() {
           : 'bg-white border-slate-100 py-4'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-10 flex items-center justify-between">
         {/* Brand Logo */}
         <NavLink to="/" className="flex items-center gap-2.5 group flex-shrink-0">
           <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-lime-400 font-bold transition-transform group-hover:scale-105 shadow-xs">
@@ -111,7 +111,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center flex-shrink-0">
           <NavLink
             to="/agent"
-            className="inline-flex items-center gap-2 px-4.5 py-2.5 rounded-full bg-lime-400 text-slate-950 text-sm font-bold hover:bg-lime-300 transition-all shadow-sm hover:shadow-lime-500/20"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-lime-400 text-slate-950 text-sm font-bold hover:bg-lime-300 transition-all shadow-sm hover:shadow-lime-500/20 whitespace-nowrap"
           >
             <Bot className="w-4 h-4" />
             Try Assistant
