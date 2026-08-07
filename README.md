@@ -239,7 +239,7 @@ User Query ──▶ Auth ──▶ Rate Limit ──▶ Sanitize ──▶ Rout
 ### 1. Clone & Set Up Python Environment
 
 ```bash
-git clone https://github.com/your-username/rag-customer-support-agent.git
+git clone https://github.com/sammedbg/rag-customer-support-agent.git
 cd rag-customer-support-agent
 
 # Create virtual environment
