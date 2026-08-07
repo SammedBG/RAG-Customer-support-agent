@@ -65,7 +65,7 @@ def create_app() -> FastAPI:
 
     # ── Rate limiter ─────────────────────────────────────────
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     # ── CORS ─────────────────────────────────────────────────
     app.add_middleware(
@@ -100,7 +100,7 @@ def create_app() -> FastAPI:
         logger.error(
             "unhandled_exception",
             error=str(exc),
-            path=str(request.url.path),
+            path=request.url.path,
         )
         return JSONResponse(
             status_code=500,
