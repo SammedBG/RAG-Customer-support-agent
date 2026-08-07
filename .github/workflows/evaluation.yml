@@ -1,0 +1,77 @@
+# ──────────────────────────────────────────────────────────────
+# RAG Evaluation Pipeline
+# Runs nightly or on-demand to track retrieval & generation quality
+# ──────────────────────────────────────────────────────────────
+
+name: RAG Evaluation
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"  # Every Monday at 3:00 AM UTC
+  workflow_dispatch:        # Manual trigger
+    inputs:
+      sample_size:
+        description: "Number of golden QA pairs to evaluate"
+        required: false
+        default: "20"
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  evaluate:
+    name: Run RAGAS Evaluation
+    runs-on: ubuntu-latest
+    environment: evaluation
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Start Qdrant (embedded mode)
+        run: echo "Using embedded Qdrant (data/qdrant_storage)"
+
+      - name: Ingest documents
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python scripts/ingest.py --data-dir data/sample_docs --force
+
+      - name: Run RAGAS evaluation
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          RAGAS_SAMPLE_SIZE: ${{ github.event.inputs.sample_size || '20' }}
+        run: python scripts/evaluate.py
+
+      - name: Run DeepEval tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: deepeval test run src/evaluation/deepeval_tests.py --verbose
+        continue-on-error: true  # Report results without blocking
+
+      - name: Upload evaluation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-${{ github.run_number }}
+          path: |
+            logs/evaluation_*.json
+            logs/evaluation_*.log
+          retention-days: 90
