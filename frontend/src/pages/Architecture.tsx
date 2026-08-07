@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Database,
   Cpu,
@@ -15,7 +16,12 @@ export default function Architecture() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       {/* Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center max-w-3xl mx-auto space-y-3"
+      >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-300 text-lime-900 text-xs font-semibold">
           <GitBranch className="w-3.5 h-3.5" />
           Technical Blueprint
@@ -26,7 +32,7 @@ export default function Architecture() {
         <p className="text-lg text-slate-600">
           From document ingestion to grounded generation.
         </p>
-      </div>
+      </motion.div>
 
       {/* Interactive Responsive HTML/CSS Pipeline Visualization */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm space-y-10">

@@ -99,10 +99,19 @@ class HealthResponse(BaseModel):
 class DocumentInfo(BaseModel):
     """Information about an ingested document."""
 
-    source_file: str
-    source_path: str
-    ingested_at: str
-    chunk_count: int
+    id: str
+    name: str
+    type: str
+    status: str = "Indexed"
+    chunksCount: int
+    lastIndexed: str
+    fileSize: Optional[str] = "1.0 MB"
+    embeddingModel: Optional[str] = "BAAI/bge-small-en-v1.5"
+    chunkingStrategy: Optional[str] = "Hierarchical Parent/Child"
+    parentChunkSize: Optional[int] = 1024
+    childChunkSize: Optional[int] = 256
+    overlapTokens: Optional[int] = 64
+    previewChunks: Optional[list[dict]] = Field(default_factory=list)
 
 
 class DocumentListResponse(BaseModel):

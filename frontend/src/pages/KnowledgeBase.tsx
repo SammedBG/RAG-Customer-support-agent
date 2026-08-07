@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
   UploadCloud,
   FileText,
@@ -44,20 +45,25 @@ export default function KnowledgeBase() {
     setIsUploading(false);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteDocument(id);
+  const handleDelete = async (doc: DocumentItem) => {
+    await deleteDocument(doc.id, doc.name);
     await loadDocs();
   };
 
-  const handleReindex = async (id: string) => {
-    await reindexDocument(id);
+  const handleReindex = async (doc: DocumentItem) => {
+    await reindexDocument(doc.id, doc.name);
     await loadDocs();
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6"
+      >
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Knowledge Base</h1>
           <p className="text-slate-600 text-sm mt-1">
@@ -79,7 +85,7 @@ export default function KnowledgeBase() {
           className="hidden"
           accept=".pdf,.md,.markdown,.txt,.docx"
         />
-      </div>
+      </motion.div>
 
       {/* Upload Drag & Drop Area */}
       <div
@@ -192,14 +198,14 @@ export default function KnowledgeBase() {
                         View
                       </button>
                       <button
-                        onClick={() => handleReindex(doc.id)}
+                        onClick={() => handleReindex(doc)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                         title="Reindex"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => handleDelete(doc)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                         title="Delete"
                       >

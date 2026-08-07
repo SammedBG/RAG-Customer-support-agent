@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
-# Neura — RAG Customer Support Agent
+# Neura - RAG Customer Support Agent
 
 A production-grade Retrieval-Augmented Generation (RAG) agent built to answer customer support questions using company documents — with **verifiable source citations**, **hallucination guardrails**, and a **security-hardened API layer**. Not a demo; engineered for production deployment.
 

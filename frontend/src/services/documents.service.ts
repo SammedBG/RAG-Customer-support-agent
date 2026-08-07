@@ -102,11 +102,11 @@ let mockDocuments = [...INITIAL_MOCK_DOCUMENTS];
 export async function fetchDocuments(): Promise<DocumentItem[]> {
   try {
     const res = await apiClient.get('/documents');
-    if (res.data && Array.isArray(res.data.documents)) {
+    if (res.data && Array.isArray(res.data.documents) && res.data.documents.length > 0) {
       return res.data.documents;
     }
   } catch (err) {
-    // Fallback to mock service
+    console.warn('API error fetching documents, using fallback:', err);
   }
   return mockDocuments;
 }
@@ -116,7 +116,7 @@ export async function uploadDocument(file: File): Promise<DocumentItem> {
   const docType: DocumentItem['type'] =
     extension === 'PDF' ? 'PDF' : extension === 'MD' || extension === 'MARKDOWN' ? 'Markdown' : extension === 'DOCX' ? 'DOCX' : 'TXT';
 
-  const newDoc: DocumentItem = {
+  const fallbackDoc: DocumentItem = {
     id: `doc-${Date.now()}`,
     name: file.name,
     type: docType,
@@ -124,7 +124,7 @@ export async function uploadDocument(file: File): Promise<DocumentItem> {
     chunksCount: Math.floor(Math.random() * 30) + 15,
     lastIndexed: 'Just now',
     fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-    embeddingModel: 'text-embedding-3-small',
+    embeddingModel: 'BAAI/bge-small-en-v1.5',
     chunkingStrategy: 'Hierarchical Parent/Child',
     parentChunkSize: 1024,
     childChunkSize: 256,
@@ -141,29 +141,40 @@ export async function uploadDocument(file: File): Promise<DocumentItem> {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    await apiClient.post('/documents', formData, {
+    const res = await apiClient.post('/documents', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+    if (res.data && res.data.name) {
+      mockDocuments.unshift(res.data);
+      return res.data;
+    }
   } catch (err) {
-    // Save to mock storage if API offline
+    console.warn('API error uploading document, using fallback item:', err);
   }
 
-  mockDocuments.unshift(newDoc);
-  return newDoc;
+  mockDocuments.unshift(fallbackDoc);
+  return fallbackDoc;
 }
 
-export async function deleteDocument(id: string): Promise<boolean> {
+export async function deleteDocument(id: string, name?: string): Promise<boolean> {
+  const target = name || id;
   try {
-    await apiClient.delete(`/documents/${id}`);
+    await apiClient.delete(`/documents/${target}`);
   } catch (err) {
-    // Fallback
+    console.warn('API error deleting document:', err);
   }
-  mockDocuments = mockDocuments.filter((doc) => doc.id !== id);
+  mockDocuments = mockDocuments.filter((doc) => doc.id !== id && doc.name !== name);
   return true;
 }
 
-export async function reindexDocument(id: string): Promise<boolean> {
-  const doc = mockDocuments.find((d) => d.id === id);
+export async function reindexDocument(id: string, name?: string): Promise<boolean> {
+  const target = name || id;
+  try {
+    await apiClient.post(`/documents/${target}/reindex`);
+  } catch (err) {
+    console.warn('API error reindexing document:', err);
+  }
+  const doc = mockDocuments.find((d) => d.id === id || d.name === name);
   if (doc) {
     doc.status = 'Processing';
     setTimeout(() => {

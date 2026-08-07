@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   BarChart3,
   Play,
@@ -43,7 +44,12 @@ export default function Evaluation() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6"
+      >
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">RAG Evaluation</h1>
           <p className="text-slate-600 text-sm mt-1">
@@ -68,7 +74,7 @@ export default function Evaluation() {
             </>
           )}
         </button>
-      </div>
+      </motion.div>
 
       {/* Benchmark Parameters Banner */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm">
