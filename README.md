@@ -10,7 +10,7 @@
 
 # Neura - RAG Customer Support Agent
 
-A production-grade Retrieval-Augmented Generation (RAG) agent built to answer customer support questions using company documents — with **verifiable source citations**, **hallucination guardrails**, and a **security-hardened API layer**. Not a demo; engineered for production deployment.
+A production-grade Retrieval-Augmented Generation (RAG) agent built to answer customer support questions using company documents - with **verifiable source citations**, **hallucination guardrails**, and a **security-hardened API layer**. Not a demo; engineered for production deployment.
 
 ---
 
@@ -39,11 +39,11 @@ A production-grade Retrieval-Augmented Generation (RAG) agent built to answer cu
 
 Most RAG tutorials stop at "put documents into a vector DB and call an LLM." This project addresses the engineering gaps that matter in production:
 
-- **Retrieval quality** — Hybrid search (dense + sparse) with Reciprocal Rank Fusion outperforms pure semantic search on real-world queries.
-- **Answer reliability** — A multi-node LangGraph state machine routes, grades, generates, and verifies every answer before returning it.
-- **Traceability** — Every response includes structured citations pointing to the exact document chunks used.
-- **Fail-closed design** — When the system can't produce a grounded answer, it says so rather than hallucinating.
-- **Security** — Input sanitization, prompt injection detection, rate limiting, and audit logging are built-in, not bolted on.
+- **Retrieval quality** - Hybrid search (dense + sparse) with Reciprocal Rank Fusion outperforms pure semantic search on real-world queries.
+- **Answer reliability** - A multi-node LangGraph state machine routes, grades, generates, and verifies every answer before returning it.
+- **Traceability** - Every response includes structured citations pointing to the exact document chunks used.
+- **Fail-closed design** - When the system can't produce a grounded answer, it says so rather than hallucinating.
+- **Security** - Input sanitization, prompt injection detection, rate limiting, and audit logging are built-in, not bolted on.
 
 ---
 
@@ -51,9 +51,9 @@ Most RAG tutorials stop at "put documents into a vector DB and call an LLM." Thi
 
 | Category | Feature |
 |----------|---------|
-| **Retrieval** | Hybrid search — Dense (semantic) + Sparse (BM25) vectors fused with RRF |
+| **Retrieval** | Hybrid search - Dense (semantic) + Sparse (BM25) vectors fused with RRF |
 | **Retrieval** | Cross-encoder reranking (`ms-marco-MiniLM-L-6-v2`) on top-N candidates |
-| **Retrieval** | Parent/child chunking — small chunks for retrieval, large chunks for generation context |
+| **Retrieval** | Parent/child chunking - small chunks for retrieval, large chunks for generation context |
 | **Orchestration** | LangGraph state machine with 6 nodes: route → retrieve → grade → generate → hallucination check → fallback |
 | **Ingestion** | LlamaIndex-powered document loading with hierarchical chunking pipeline |
 | **Embeddings** | OpenAI `text-embedding-3-small` or local `BAAI/bge-small-en-v1.5` (automatic fallback) |
@@ -121,12 +121,12 @@ User Query ──▶ Auth ──▶ Rate Limit ──▶ Sanitize ──▶ Rout
 
 | Node | Purpose |
 |------|---------|
-| `route_query` | LLM classifier — routes to hybrid retrieval or direct response for greetings/chitchat |
+| `route_query` | LLM classifier - routes to hybrid retrieval or direct response for greetings/chitchat |
 | `retrieve` | Executes hybrid search on Qdrant (dense + sparse prefetch → RRF fusion), then cross-encoder reranking |
-| `grade_documents` | LLM-based relevance grading — filters out irrelevant chunks before generation |
+| `grade_documents` | LLM-based relevance grading - filters out irrelevant chunks before generation |
 | `generate` | Produces a cited answer using filtered parent-chunk context, with inline `[1]`, `[2]` references |
 | `check_hallucination` | LLM verification that the generated answer is grounded in the retrieved context |
-| `fallback` | Safe "I don't know" response with support contact information — fail-closed behavior |
+| `fallback` | Safe "I don't know" response with support contact information - fail-closed behavior |
 
 ---
 
@@ -276,10 +276,10 @@ OPENAI_CHAT_MODEL=gpt-4o-mini
 
 # ── Embeddings ──────────────────────────────────────
 # Leave OPENAI_API_KEY empty to use local FastEmbed
-# (BAAI/bge-small-en-v1.5) — no API key needed
+# (BAAI/bge-small-en-v1.5) - no API key needed
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
-# ── Qdrant (optional — auto-falls back to local) ───
+# ── Qdrant (optional - auto-falls back to local) ───
 QDRANT_URL=http://localhost:6333
 QDRANT_COLLECTION_NAME=customer_support_docs
 
@@ -301,12 +301,12 @@ python scripts/ingest.py --data-dir data/sample_docs
 Expected output:
 ```
 ============================================================
-RAG Customer Support Agent — Document Ingestion
+RAG Customer Support Agent - Document Ingestion
 ============================================================
 Loaded 4 documents
 Created 31 parent chunks, 147 child chunks
 Upserting 147 vectors to Qdrant...
-✓ Ingestion complete — 147 vectors stored
+✓ Ingestion complete - 147 vectors stored
 ```
 
 ### 4. Start the Backend
@@ -337,8 +337,8 @@ All configuration is managed through environment variables, loaded via Pydantic 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GROQ_API_KEY` | — | Groq API key (takes priority over OpenAI) |
-| `OPENAI_API_KEY` | — | OpenAI API key (used if Groq key is absent) |
+| `GROQ_API_KEY` | - | Groq API key (takes priority over OpenAI) |
+| `OPENAI_API_KEY` | - | OpenAI API key (used if Groq key is absent) |
 | `CHUNK_SIZE` | `1024` | Parent chunk size in characters |
 | `CHILD_CHUNK_SIZE` | `256` | Child chunk size for retrieval |
 | `CHUNK_OVERLAP` | `64` | Overlap between chunks |
@@ -352,14 +352,14 @@ All configuration is managed through environment variables, loaded via Pydantic 
 
 The system selects an LLM in this order:
 
-1. **Groq** — if `GROQ_API_KEY` is set
-2. **OpenAI** — if `OPENAI_API_KEY` is set
-3. **Mock fallback** — returns canned responses (for testing)
+1. **Groq** - if `GROQ_API_KEY` is set
+2. **OpenAI** - if `OPENAI_API_KEY` is set
+3. **Mock fallback** - returns canned responses (for testing)
 
 ### Embedding Provider Priority
 
-1. **OpenAI** — if `OPENAI_API_KEY` is set → uses `text-embedding-3-small`
-2. **Local FastEmbed** — automatic fallback → uses `BAAI/bge-small-en-v1.5` (no API key needed, runs on CPU)
+1. **OpenAI** - if `OPENAI_API_KEY` is set → uses `text-embedding-3-small`
+2. **Local FastEmbed** - automatic fallback → uses `BAAI/bge-small-en-v1.5` (no API key needed, runs on CPU)
 
 ---
 
@@ -396,9 +396,9 @@ curl -X POST http://localhost:8000/api/v1/query \
 Navigate to **http://localhost:5173/agent** and use the live chat interface. Features include:
 
 - **Suggested questions** to get started
-- **Inline citation tags** `[1]` `[2]` — click to expand source evidence
-- **Source Evidence Drawer** — shows exact passage text and match scores
-- **RAG Trace Inspector** — expand to see each pipeline step (route → retrieve → grade → generate → verify)
+- **Inline citation tags** `[1]` `[2]` - click to expand source evidence
+- **Source Evidence Drawer** - shows exact passage text and match scores
+- **RAG Trace Inspector** - expand to see each pipeline step (route → retrieve → grade → generate → verify)
 - **Conversation sidebar** for managing multiple chat sessions
 
 ---
@@ -457,7 +457,7 @@ The evaluation uses a curated set of 20 question-answer pairs in [`src/evaluatio
 
 ## Security
 
-Security is **not an afterthought** — it's a first-class module.
+Security is **not an afterthought** - it's a first-class module.
 
 ### Defense Layers
 
@@ -495,9 +495,9 @@ The frontend is a **React + TypeScript + Vite + Tailwind CSS** portfolio applica
 |------|-------|---------|
 | **Home** | `/` | Technical hero, technology strip, RAG evaluation metric teaser, feature categories, security architecture |
 | **Architecture** | `/architecture` | Interactive pipeline flow diagram showing ingestion and query paths |
-| **Knowledge Base** | `/knowledge-base` | Document management — drag & drop upload, status table, chunk previews |
-| **Evaluation** | `/evaluation` | RAGAS dashboard — 4 metric cards, golden dataset assertion table, debug trace modal |
-| **Live Agent** | `/agent` | Chat interface — conversations, citations, RAG trace inspector, suggested questions |
+| **Knowledge Base** | `/knowledge-base` | Document management - drag & drop upload, status table, chunk previews |
+| **Evaluation** | `/evaluation` | RAGAS dashboard - 4 metric cards, golden dataset assertion table, debug trace modal |
+| **Live Agent** | `/agent` | Chat interface - conversations, citations, RAG trace inspector, suggested questions |
 
 ### Running the Frontend
 
@@ -627,9 +627,9 @@ The project ships with **3 GitHub Actions workflows** in [`.github/workflows/`](
 | Job | What It Does | Blocking? |
 |-----|-------------|:---------:|
 | **Lint & Type Check** | Runs `ruff check`, `ruff format --check`, and `mypy` on all Python code | ✅ (MyPy advisory) |
-| **Unit Tests** | Runs `pytest` with coverage report — uploads XML artifacts | ✅ |
+| **Unit Tests** | Runs `pytest` with coverage report - uploads XML artifacts | ✅ |
 | **Security Scan** | Ruff security rules (`S` / bandit-equivalent) + `pip audit` for known CVEs | ⚠️ Advisory |
-| **Frontend Build** | `npm ci` + `vite build` — ensures the React app compiles cleanly | ✅ |
+| **Frontend Build** | `npm ci` + `vite build` - ensures the React app compiles cleanly | ✅ |
 
 ### Workflow 2: CD (`cd.yml`)
 
