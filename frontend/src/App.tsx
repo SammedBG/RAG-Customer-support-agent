@@ -9,6 +9,8 @@ import Evaluation from './pages/Evaluation';
 import LiveAgent from './pages/LiveAgent';
 import AssistantModal from './components/layout/AssistantModal';
 
+import CustomAgentModal from './components/layout/CustomAgentModal';
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -19,6 +21,7 @@ function ScrollToTop() {
 
 export default function App() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
   return (
     <BrowserRouter>
@@ -27,7 +30,10 @@ export default function App() {
         <Navbar onOpenAssistant={() => setIsAssistantOpen(true)} />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route
+              path="/"
+              element={<Home onOpenCustomRequest={() => setIsCustomModalOpen(true)} />}
+            />
             <Route path="/architecture" element={<Architecture />} />
             <Route path="/knowledge-base" element={<KnowledgeBase />} />
             <Route path="/evaluation" element={<Evaluation />} />
@@ -41,6 +47,12 @@ export default function App() {
         <AssistantModal
           isOpen={isAssistantOpen}
           onClose={() => setIsAssistantOpen(false)}
+        />
+
+        {/* Custom AI Agent Request Modal */}
+        <CustomAgentModal
+          isOpen={isCustomModalOpen}
+          onClose={() => setIsCustomModalOpen(false)}
         />
       </div>
     </BrowserRouter>

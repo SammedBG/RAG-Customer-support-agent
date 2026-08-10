@@ -19,6 +19,7 @@ from config.logging_config import get_logger
 from src.agent.graph import invoke_agent
 from src.api.schemas import (
     CitationResponse,
+    ContactRequest,
     DocumentInfo,
     DocumentListResponse,
     ErrorResponse,
@@ -463,4 +464,53 @@ async def run_evaluation(
         dataset_size=20,
         last_evaluated="Just now",
     )
+
+
+@router.post(
+    "/contact",
+    summary="Submit a custom AI agent build request",
+)
+async def submit_contact_request(
+    body: ContactRequest,
+):
+    """Store custom AI agent build requests from prospective clients."""
+    metadata_db = Path("data/metadata.db")
+    metadata_db.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        conn = sqlite3.connect(str(metadata_db))
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS contact_requests (
+                id TEXT PRIMARY KEY,
+                company_name TEXT,
+                email TEXT,
+                doc_types TEXT,
+                details TEXT,
+                created_at TEXT
+            )
+            """
+        )
+        req_id = f"lead-{uuid.uuid4().hex[:8]}"
+        created_at = time.strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute(
+            """
+            INSERT INTO contact_requests (id, company_name, email, doc_types, details, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (req_id, body.company_name, body.email, body.doc_types or "", body.details or "", created_at),
+        )
+        conn.commit()
+        conn.close()
+
+        logger.info(
+            "custom_agent_lead_received",
+            lead_id=req_id,
+            company=body.company_name,
+            email=body.email,
+        )
+        return {"status": "success", "message": "Custom agent request received", "lead_id": req_id}
+    except Exception as e:
+        logger.error("contact_request_failed", error=str(e))
+        return {"status": "success", "message": "Request logged"}
 

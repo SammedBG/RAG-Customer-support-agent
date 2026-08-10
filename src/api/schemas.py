@@ -44,6 +44,15 @@ class IngestRequest(BaseModel):
     )
 
 
+class ContactRequest(BaseModel):
+    """Request body for submitting a custom agent build request."""
+
+    company_name: str = Field(..., min_length=1, description="Company or client name")
+    email: str = Field(..., min_length=3, description="Client contact email")
+    doc_types: Optional[str] = Field(default=None, description="Document formats or knowledge sources")
+    details: Optional[str] = Field(default=None, description="Project requirements or details")
+
+
 # ─────────────────────────────────────────────────────────────
 # Response Schemas
 # ─────────────────────────────────────────────────────────────

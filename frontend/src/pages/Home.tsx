@@ -11,11 +11,24 @@ import {
   BarChart3,
   Cpu,
   Lock,
+  Sparkles,
+  Rocket,
+  Building2,
+  FileText,
+  Clock,
+  UploadCloud,
+  Code,
+  Workflow,
+  Zap,
 } from 'lucide-react';
 import { fetchEvaluationMetrics } from '../services/evaluation.service';
 import { EvaluationMetrics } from '../types';
 
-export default function Home() {
+interface HomeProps {
+  onOpenCustomRequest?: () => void;
+}
+
+export default function Home({ onOpenCustomRequest }: HomeProps) {
   const [metrics, setMetrics] = useState<EvaluationMetrics | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -345,6 +358,160 @@ export default function Home() {
                   <span>{item}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* How It Works for Clients & Businesses */}
+      <motion.section
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12"
+      >
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lime-100 border border-lime-300 text-lime-900 text-xs font-semibold">
+            <Workflow className="w-3.5 h-3.5" />
+            Client Implementation Flow
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            How It Works for Your Business
+          </h2>
+          <p className="text-slate-600 text-base">
+            Deploying a custom AI support agent for your company takes 4 simple steps with zero technical overhead on your end.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Step 1 */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4 flex flex-col justify-between hover:border-slate-300 transition-all">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-lime-700 bg-lime-100 px-2.5 py-1 rounded-full">
+                  STEP 01
+                </span>
+                <UploadCloud className="w-5 h-5 text-slate-400" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg">Send Your Documents</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Send your company PDFs, Notion docs, user guides, or website FAQs. No formatting needed.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 border-t border-slate-100 pt-3">
+              Supported: PDF, MD, DOCX, TXT
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4 flex flex-col justify-between hover:border-slate-300 transition-all">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-lime-700 bg-lime-100 px-2.5 py-1 rounded-full">
+                  STEP 02
+                </span>
+                <Cpu className="w-5 h-5 text-slate-400" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg">Vector Indexing</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                We chunk and index your knowledge into Qdrant with dual dense + BM25 sparse vectors.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 border-t border-slate-100 pt-3">
+              Zero-hallucination verification
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4 flex flex-col justify-between hover:border-slate-300 transition-all">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-lime-700 bg-lime-100 px-2.5 py-1 rounded-full">
+                  STEP 03
+                </span>
+                <Sparkles className="w-5 h-5 text-slate-400" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg">Custom Branding</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                We customize the widget colors, logo, prompt chips, and prompt guardrails for your brand.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 border-t border-slate-100 pt-3">
+              Tailored brand tone & rules
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4 flex flex-col justify-between hover:border-slate-300 transition-all">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-lime-700 bg-lime-100 px-2.5 py-1 rounded-full">
+                  STEP 04
+                </span>
+                <Code className="w-5 h-5 text-slate-400" />
+              </div>
+              <h3 className="font-bold text-slate-900 text-lg">1-Line Embed Code</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Paste a single script tag into your website. Your AI Agent goes live 24/7 immediately.
+              </p>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 border-t border-slate-100 pt-3">
+              Instant site deployment
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Custom AI Agent Solutions for Businesses */}
+      <motion.section
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
+        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-lime-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-xl relative overflow-hidden">
+          <div className="max-w-3xl space-y-6 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-lime-400/10 border border-lime-400/30 text-lime-300 text-xs font-mono font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              Custom Enterprise Services
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Need a Custom AI Agent Built for Your Company?
+            </h2>
+
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+              We engineer grounded, zero-hallucination RAG customer support agents customized for your company's proprietary documents, internal knowledge bases, and brand identity.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl space-y-1.5">
+                <FileText className="w-5 h-5 text-lime-400" />
+                <h4 className="font-bold text-white text-sm">Your Custom Docs</h4>
+                <p className="text-xs text-slate-400">PDFs, Notion, API specs, Markdown & database indexing.</p>
+              </div>
+              <div className="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl space-y-1.5">
+                <Shield className="w-5 h-5 text-lime-400" />
+                <h4 className="font-bold text-white text-sm">Citation & Safety</h4>
+                <p className="text-xs text-slate-400">100% source page citations with zero fabricated claims.</p>
+              </div>
+              <div className="bg-slate-800/60 border border-slate-700/60 p-4 rounded-2xl space-y-1.5">
+                <Clock className="w-5 h-5 text-lime-400" />
+                <h4 className="font-bold text-white text-sm">48-Hour Setup</h4>
+                <p className="text-xs text-slate-400">Fast deployment directly embedded into your website.</p>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <button
+                onClick={onOpenCustomRequest}
+                className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-lime-400 text-slate-950 font-bold text-sm sm:text-base hover:bg-lime-300 transition-all shadow-md hover:shadow-lime-500/20 cursor-pointer"
+              >
+                <Rocket className="w-5 h-5" />
+                Request Custom AI Agent Build
+              </button>
             </div>
           </div>
         </div>
