@@ -59,9 +59,9 @@ export default function KnowledgeBase() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6"
       >
         <div>
@@ -88,6 +88,11 @@ export default function KnowledgeBase() {
       </motion.div>
 
       {/* Upload Drag & Drop Area */}
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -119,9 +124,16 @@ export default function KnowledgeBase() {
           Dual Dense + BM25 Sparse Indexing Engine
         </span>
       </div>
+      </motion.div>
 
       {/* Document Management Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs"
+      >
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
             Indexed Documents ({documents.length})
@@ -218,7 +230,7 @@ export default function KnowledgeBase() {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Document Details Drawer */}
       <DocumentDrawer

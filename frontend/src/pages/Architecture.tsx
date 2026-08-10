@@ -17,9 +17,9 @@ export default function Architecture() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
         className="text-center max-w-3xl mx-auto space-y-3"
       >
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 border border-lime-300 text-lime-900 text-xs font-semibold">
@@ -35,7 +35,13 @@ export default function Architecture() {
       </motion.div>
 
       {/* Interactive Responsive HTML/CSS Pipeline Visualization */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm space-y-10">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm space-y-10"
+      >
         <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-4">
           <Zap className="w-5 h-5 text-lime-600" />
           End-to-End System Architecture Flow
@@ -99,10 +105,16 @@ export default function Architecture() {
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Three Detailed Architecture Groups */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-8"
+      >
         {/* RETRIEVAL */}
         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-xs space-y-6">
           <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -213,7 +225,7 @@ export default function Architecture() {
             </li>
           </ul>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

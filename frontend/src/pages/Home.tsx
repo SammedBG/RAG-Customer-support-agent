@@ -27,9 +27,9 @@ export default function Home() {
     <div className="space-y-24 pb-20">
       {/* Hero Section */}
       <motion.section
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         className="pt-16 pb-8 text-center max-w-4xl mx-auto px-4"
       >
         {/* Badge */}
@@ -87,10 +87,10 @@ export default function Home() {
 
       {/* RAG Evaluation Section */}
       <motion.section
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 shadow-sm">
@@ -179,10 +179,10 @@ export default function Home() {
 
       {/* Engineered for Reliable Retrieval (3 Categories) */}
       <motion.section
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12"
       >
         <div className="text-center max-w-2xl mx-auto">
@@ -313,10 +313,10 @@ export default function Home() {
 
       {/* Security-Focused Architecture */}
       <motion.section
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         <div className="bg-slate-900 text-white rounded-2xl p-8 sm:p-12">
@@ -352,10 +352,10 @@ export default function Home() {
 
       {/* Technical FAQ */}
       <motion.section
-        initial={{ opacity: 0, y: 35 }}
+        initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
       >
         <div className="text-center mb-10">

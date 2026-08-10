@@ -45,9 +45,9 @@ export default function Evaluation() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6"
       >
         <div>
@@ -77,7 +77,13 @@ export default function Evaluation() {
       </motion.div>
 
       {/* Benchmark Parameters Banner */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-slate-900 text-white rounded-2xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm"
+      >
         <div className="flex items-center gap-3">
           <div className="p-3 bg-slate-800 rounded-xl text-lime-400">
             <BarChart3 className="w-6 h-6" />
@@ -106,10 +112,16 @@ export default function Evaluation() {
             <span className="text-slate-200">{metrics?.lastEvaluated || 'Never'}</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         {[
           {
             title: 'Faithfulness',
@@ -144,10 +156,16 @@ export default function Evaluation() {
             <p className="text-xs text-slate-500">{item.desc}</p>
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Evaluation Test Cases Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.85, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs"
+      >
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
             Evaluation Golden Test Cases ({cases.length})
@@ -205,7 +223,7 @@ export default function Evaluation() {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Case Details Debug Modal */}
       <EvaluationDetailModal

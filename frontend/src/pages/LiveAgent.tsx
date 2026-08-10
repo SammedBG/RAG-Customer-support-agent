@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Plus,
@@ -181,8 +182,18 @@ export default function LiveAgent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col w-full">
-      <div className="bg-white border border-slate-200 rounded-2xl flex-1 flex overflow-hidden shadow-sm h-[calc(100vh-12rem)] min-h-[600px]">
+    <motion.div
+      initial={{ opacity: 0, y: 60 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col w-full"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-white border border-slate-200 rounded-2xl flex-1 flex overflow-hidden shadow-sm h-[calc(100vh-12rem)] min-h-[600px]"
+      >
         {/* Left Sidebar: Conversations & Connection Status */}
         <aside className="w-80 border-r border-slate-200 bg-slate-50/70 flex flex-col hidden md:flex">
           {/* New Chat Action */}
@@ -320,9 +331,13 @@ export default function LiveAgent() {
               </div>
             ) : (
               /* Chat Messages */
-              currentConv.messages.map((msg) => (
-                <div
+              <AnimatePresence mode="popLayout">
+              {currentConv.messages.map((msg) => (
+                <motion.div
                   key={msg.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                   className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'assistant' && (
@@ -410,8 +425,9 @@ export default function LiveAgent() {
                       <User className="w-4 h-4" />
                     </div>
                   )}
-                </div>
-              ))
+                </motion.div>
+              ))}
+              </AnimatePresence>
             )}
 
             {/* Polished Pipeline Loading State */}
@@ -459,13 +475,13 @@ export default function LiveAgent() {
             </form>
           </div>
         </main>
-      </div>
+      </motion.div>
 
       {/* Interactive Citation Drawer */}
       <SourceDrawer
         citation={selectedCitation}
         onClose={() => setSelectedCitation(null)}
       />
-    </div>
+    </motion.div>
   );
 }
