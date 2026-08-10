@@ -49,15 +49,22 @@ export default function LiveAgent() {
   });
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     checkSystemHealth().then(setHealth);
   }, []);
 
   const currentConv = conversations.find((c) => c.id === activeConvId) || conversations[0];
 
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (currentConv?.messages && currentConv.messages.length > 0 && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [currentConv?.messages, isLoading]);
 
   const handleStartNewChat = () => {
@@ -298,7 +305,7 @@ export default function LiveAgent() {
           </header>
 
           {/* Messages Stream */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
             {currentConv.messages.length === 0 && !isLoading ? (
               /* Empty Chat State */
               <div className="max-w-lg mx-auto py-12 text-center space-y-6">
