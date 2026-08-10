@@ -62,6 +62,7 @@ Most RAG tutorials stop at "put documents into a vector DB and call an LLM." Thi
 | **Security** | API key auth, JWT tokens, rate limiting, prompt injection detection, input sanitization, audit trail |
 | **Evaluation** | RAGAS + DeepEval metrics against a 20-pair golden QA dataset |
 | **Frontend** | React + TypeScript + Tailwind CSS portfolio dashboard with live chat, architecture diagrams, and evaluation views |
+| **UX & Modals** | Instant **Try Assistant Popup Modal** with backdrop blur overlay & **Custom AI Lead Request Form** |
 | **Infrastructure** | Docker Compose deployment with Qdrant, FastAPI, and Nginx |
 
 ---
@@ -202,7 +203,7 @@ User Query ──▶ Auth ──▶ Rate Limit ──▶ Sanitize ──▶ Rout
 │       │   ├── Evaluation.tsx   # RAGAS benchmark dashboard with assertion table
 │       │   └── LiveAgent.tsx    # Chat interface with citations, RAG trace, feedback
 │       ├── components/
-│       │   └── layout/          # Navbar, Footer
+│       │   └── layout/          # Navbar, Footer, AssistantModal, CustomAgentModal
 │       └── services/
 │           └── api.ts           # Axios API client with proxy config
 │
@@ -407,11 +408,15 @@ Navigate to **http://localhost:5173/agent** and use the live chat interface. Fea
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/query` | Submit a query to the RAG agent |
-| `GET` | `/api/v1/health` | System health check (Qdrant status, doc count) |
-| `GET` | `/api/v1/documents` | List ingested documents with metadata |
-| `POST` | `/api/v1/documents/upload` | Upload and ingest a new document |
-| `GET` | `/api/v1/evaluations/latest` | Get latest evaluation results |
+| `POST` | `/api/v1/query` | Submit a customer query to the grounded RAG agent |
+| `GET` | `/api/v1/health` | System health check (Qdrant connectivity, doc count, status) |
+| `GET` | `/api/v1/documents` | List all ingested documents with metadata |
+| `POST` | `/api/v1/documents` | Upload and ingest a new document (PDF, MD, TXT, DOCX) |
+| `DELETE` | `/api/v1/documents/{filename}` | Delete a document from vector index, disk, & metadata |
+| `POST` | `/api/v1/documents/{filename}/reindex` | Re-trigger ingestion pipeline for a document |
+| `GET` | `/api/v1/evaluations/latest` | Fetch latest RAGAS evaluation metrics |
+| `POST` | `/api/v1/evaluations` | Execute benchmark evaluation suite against golden QA dataset |
+| `POST` | `/api/v1/contact` | Submit a custom AI agent build request lead |
 | `GET` | `/docs` | Interactive Swagger/OpenAPI documentation |
 
 Full request/response schemas are defined in [`src/api/schemas.py`](src/api/schemas.py).
