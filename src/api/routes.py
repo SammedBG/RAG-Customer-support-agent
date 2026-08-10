@@ -178,7 +178,7 @@ async def ingest_documents(
         return IngestResponse(
             processed=result.get("processed", 0),
             skipped=result.get("skipped", 0),
-            chunks_created=result.get("child_chunks", result.get("points_upserted", 0)),
+            chunks_created=result.get("child_chunks", result.get("points_upserted", 0)) or 0,
             message=f"Successfully ingested {result.get('processed', 0)} documents",
         )
 
@@ -323,15 +323,21 @@ async def upload_document(
     user: AuthUser = Depends(get_current_user),
 ):
     """Upload a new document file and trigger ingestion into vector storage."""
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file must have a filename.",
+        )
+    filename: str = file.filename
     upload_dir = Path("data/sample_docs")
     upload_dir.mkdir(parents=True, exist_ok=True)
-    file_path = upload_dir / file.filename
+    file_path = upload_dir / filename
 
     content = await file.read()
     with open(file_path, "wb") as f:
         f.write(content)
 
-    logger.info("document_uploaded", filename=file.filename, size=len(content))
+    logger.info("document_uploaded", filename=filename, size=len(content))
 
     from src.ingestion.ingest_pipeline import IngestionPipeline
 
@@ -346,7 +352,7 @@ async def upload_document(
         conn = sqlite3.connect(str(metadata_db))
         cursor = conn.execute(
             "SELECT source_path, ingested_at, chunk_count FROM ingested_docs WHERE source_file = ?",
-            (file.filename,),
+            (filename,),
         )
         row = cursor.fetchone()
         conn.close()
@@ -354,7 +360,7 @@ async def upload_document(
             ingested_at = row[1]
             chunk_count = row[2]
 
-    return _build_document_info(file.filename, str(file_path), ingested_at, chunk_count)
+    return _build_document_info(filename, str(file_path), ingested_at, chunk_count)
 
 
 @router.delete(
