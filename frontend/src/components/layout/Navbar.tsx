@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Eye, ExternalLink, Bot, Menu, X } from 'lucide-react';
 
-export default function Navbar() {
+interface NavbarProps {
+  onOpenAssistant?: () => void;
+}
+
+export default function Navbar({ onOpenAssistant }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -107,15 +111,15 @@ export default function Navbar() {
           </a>
         </nav>
 
-        {/* Primary Action CTA */}
+        {/* Primary Action CTA - Opens Popup Modal */}
         <div className="hidden md:flex items-center flex-shrink-0">
-          <NavLink
-            to="/agent"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-lime-400 text-slate-950 text-sm font-bold hover:bg-lime-300 transition-all shadow-sm hover:shadow-lime-500/20 whitespace-nowrap"
+          <button
+            onClick={onOpenAssistant}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-lime-400 text-slate-950 text-sm font-bold hover:bg-lime-300 transition-all shadow-sm hover:shadow-lime-500/20 whitespace-nowrap cursor-pointer"
           >
             <Bot className="w-4 h-4" />
             Try Assistant
-          </NavLink>
+          </button>
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -172,13 +176,16 @@ export default function Navbar() {
             <ExternalLink className="w-4 h-4 text-slate-400" />
           </a>
           <div className="pt-2">
-            <NavLink
-              to="/agent"
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                onOpenAssistant?.();
+              }}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-lime-400 text-slate-950 text-sm font-bold hover:bg-lime-300"
             >
               <Bot className="w-4 h-4" />
               Try Assistant
-            </NavLink>
+            </button>
           </div>
         </div>
       )}
