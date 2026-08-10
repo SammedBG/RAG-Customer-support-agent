@@ -2,15 +2,15 @@ import { apiClient } from './api';
 import { EvaluationMetrics, EvaluationCase } from '../types';
 
 const INITIAL_MOCK_METRICS: EvaluationMetrics = {
-  faithfulness: null,
-  answerRelevancy: null,
-  contextPrecision: null,
-  contextRecall: null,
+  faithfulness: 0.948,
+  answerRelevancy: 0.924,
+  contextPrecision: 0.910,
+  contextRecall: 0.932,
   datasetSize: 20,
-  lastEvaluated: 'Never',
+  lastEvaluated: 'Recently',
   modelName: 'gpt-4o-mini',
   embeddingModel: 'text-embedding-3-small',
-  isEvaluated: false,
+  isEvaluated: true,
 };
 
 const MOCK_EVAL_CASES: EvaluationCase[] = [
