@@ -13,6 +13,7 @@ import time
 import uuid
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 
 from config.logging_config import get_logger
@@ -470,12 +471,38 @@ async def run_evaluation(
     "/contact",
     summary="Submit a custom AI agent build request",
 )
+async def _send_resend_email(api_key: str, from_email: str, to_email: str, subject: str, html_content: str):
+    """Send an email using Resend HTTP REST API."""
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "from": from_email,
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content,
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        res = await client.post(url, json=payload, headers=headers)
+        if res.status_code >= 400:
+            logger.error("resend_email_failed", status=res.status_code, body=res.text)
+
+
+@router.post(
+    "/contact",
+    summary="Submit a custom AI agent build request",
+)
 async def submit_contact_request(
     body: ContactRequest,
 ):
-    """Store custom AI agent build requests from prospective clients."""
+    """Store custom AI agent build requests from prospective clients and send real-time Resend emails."""
     metadata_db = Path("data/metadata.db")
     metadata_db.parent.mkdir(parents=True, exist_ok=True)
+
+    req_id = f"lead-{uuid.uuid4().hex[:8]}"
+    created_at = time.strftime("%Y-%m-%d %H:%M:%S")
 
     try:
         conn = sqlite3.connect(str(metadata_db))
@@ -491,8 +518,6 @@ async def submit_contact_request(
             )
             """
         )
-        req_id = f"lead-{uuid.uuid4().hex[:8]}"
-        created_at = time.strftime("%Y-%m-%d %H:%M:%S")
         conn.execute(
             """
             INSERT INTO contact_requests (id, company_name, email, doc_types, details, created_at)
@@ -509,8 +534,65 @@ async def submit_contact_request(
             company=body.company_name,
             email=body.email,
         )
-        return {"status": "success", "message": "Custom agent request received", "lead_id": req_id}
     except Exception as e:
-        logger.error("contact_request_failed", error=str(e))
-        return {"status": "success", "message": "Request logged"}
+        logger.error("contact_request_db_failed", error=str(e))
+
+    # Send Real-Time Email Notifications via Resend if API key is configured
+    settings = get_settings()
+    if settings.resend_api_key:
+        try:
+            # 1. Admin Alert Email (Notification to YOU)
+            recipient_admin = settings.admin_email or body.email
+            admin_subject = f"🚀 New Custom AI Agent Request: {body.company_name}"
+            admin_html = f"""
+            <h2>New Enterprise Custom AI Lead Received</h2>
+            <p><strong>Lead ID:</strong> {req_id}</p>
+            <p><strong>Company Name:</strong> {body.company_name}</p>
+            <p><strong>Contact Email:</strong> <a href="mailto:{body.email}">{body.email}</a></p>
+            <p><strong>Document Types / Sources:</strong> {body.doc_types or 'Not specified'}</p>
+            <p><strong>Project Requirements:</strong></p>
+            <blockquote style="background:#f4f4f5; padding:12px; border-left:4px solid #84cc16;">
+                {body.details or 'No additional details provided.'}
+            </blockquote>
+            <p><small>Received at {created_at}</small></p>
+            """
+            await _send_resend_email(
+                api_key=settings.resend_api_key,
+                from_email=settings.from_email,
+                to_email=recipient_admin,
+                subject=admin_subject,
+                html_content=admin_html,
+            )
+
+            # 2. Client Auto-Responder Confirmation Email (Confirmation back to CLIENT)
+            client_subject = "We received your request for a Custom AI Agent — Neura AI"
+            client_html = f"""
+            <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <h2 style="color: #0f172a; margin-top: 0;">Thank you for reaching out to Neura AI!</h2>
+                <p>Hi <strong>{body.company_name}</strong> team,</p>
+                <p>We received your inquiry regarding a custom grounded RAG AI Agent for your business documents.</p>
+                <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid #84cc16; margin: 20px 0;">
+                    <p style="margin: 0 0 8px 0;"><strong>Request Summary:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li><strong>Company:</strong> {body.company_name}</li>
+                        <li><strong>Email:</strong> {body.email}</li>
+                        <li><strong>Knowledge Sources:</strong> {body.doc_types or 'Standard documents'}</li>
+                    </ul>
+                </div>
+                <p>Our engineering team is reviewing your requirements and will reach out to you at <strong>{body.email}</strong> within 24 hours with a custom architecture proposal and timeline.</p>
+                <p style="margin-top: 30px; font-size: 13px; color: #64748b;">Best regards,<br/><strong>Neura AI Agent Team</strong></p>
+            </div>
+            """
+            await _send_resend_email(
+                api_key=settings.resend_api_key,
+                from_email=settings.from_email,
+                to_email=body.email,
+                subject=client_subject,
+                html_content=client_html,
+            )
+            logger.info("resend_emails_dispatched", lead_id=req_id, client=body.email)
+        except Exception as e:
+            logger.error("resend_email_dispatch_failed", error=str(e))
+
+    return {"status": "success", "message": "Custom agent request received and emails sent", "lead_id": req_id}
 

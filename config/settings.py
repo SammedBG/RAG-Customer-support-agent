@@ -97,6 +97,11 @@ class Settings(BaseSettings):
     langfuse_public_key: Optional[str] = Field(default=None)
     langfuse_secret_key: Optional[str] = Field(default=None)
 
+    # ── Resend Email Notifications (optional) ───────────────────
+    resend_api_key: Optional[str] = Field(default=None, description="Resend.com API key for sending email notifications")
+    admin_email: Optional[str] = Field(default=None, description="Email address to receive lead alerts")
+    from_email: str = Field(default="onboarding@resend.dev", description="Sender email address for Resend")
+
     # ── Derived Properties ──────────────────────────────────────
 
     @property
