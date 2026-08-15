@@ -16,14 +16,13 @@ build/
 .venv/
 venv/
 env/
-.env.example
 
 # === Node / React ===
 frontend/node_modules/
 frontend/dist/
 frontend/.env
 frontend/.env.local
-data/sample_docs/   
+
 # === IDE ===
 .vscode/
 .idea/
@@ -35,8 +34,10 @@ data/sample_docs/
 .DS_Store
 Thumbs.db
 
-# === Qdrant Data ===
+# === Qdrant Data (local dev storage) ===
 qdrant_data/
+data/qdrant_storage/
+data/metadata.db
 
 # === Logs ===
 logs/

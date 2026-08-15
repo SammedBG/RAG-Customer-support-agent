@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     app_debug: bool = Field(default=False)
     app_host: str = Field(default="0.0.0.0")
     app_port: int = Field(default=8000)
+    port: int | None = Field(
+        default=None,
+        description="PORT env var set by Render/Heroku — overrides app_port when present",
+    )
     log_level: str = Field(default="INFO")
     cors_origins: str = Field(
         default="http://localhost:3000,http://localhost:5173",
@@ -104,6 +108,11 @@ class Settings(BaseSettings):
     def api_keys_list(self) -> list[str]:
         """Parse comma-separated API keys into a list."""
         return [key.strip() for key in self.api_keys.split(",") if key.strip()]
+
+    @property
+    def effective_port(self) -> int:
+        """Use PORT env (from Render/Heroku) if set, else fall back to app_port."""
+        return self.port if self.port is not None else self.app_port
 
     @property
     def is_production(self) -> bool:

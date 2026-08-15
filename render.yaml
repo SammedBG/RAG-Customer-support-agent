@@ -1,0 +1,53 @@
+# ──────────────────────────────────────────────────────────────
+# render.yaml — Render Blueprint (Infrastructure as Code)
+# Deploy with: https://render.com/deploy → Connect GitHub repo
+# ──────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: rag-customer-support-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      # ── LLM Provider ──────────────────────────────────────
+      - key: GROQ_API_KEY
+        sync: false  # User must set this manually
+      - key: GROQ_CHAT_MODEL
+        value: llama-3.3-70b-versatile
+
+      # ── Qdrant Cloud ──────────────────────────────────────
+      - key: QDRANT_URL
+        sync: false  # User must set this (Qdrant Cloud URL)
+      - key: QDRANT_API_KEY
+        sync: false  # User must set this (Qdrant Cloud API key)
+      - key: QDRANT_COLLECTION_NAME
+        value: customer_support_docs
+
+      # ── Application ───────────────────────────────────────
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        sync: false  # Set to your Vercel frontend URL
+
+      # ── Security ──────────────────────────────────────────
+      - key: API_KEYS
+        generateValue: true  # Render auto-generates a secure key
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure secret
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRY_MINUTES
+        value: "60"
+
+      # ── Rate Limiting ─────────────────────────────────────
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "30"
+      - key: RATE_LIMIT_BURST
+        value: "5"

@@ -1,0 +1,62 @@
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# ── Testing / Linting ───────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+.deepeval/
+.mypy_cache/
+.ruff_cache/
+tests/
+
+# ── IDE ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Git ─────────────────────────────────────────────────────
+.git/
+.github/
+.gitignore
+
+# ── Environment ─────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.example
+
+# ── Frontend (built separately) ─────────────────────────────
+frontend/
+node_modules/
+
+# ── Local data (production uses Qdrant Cloud) ───────────────
+data/qdrant_storage/
+data/metadata.db
+logs/
+
+# ── Docker ──────────────────────────────────────────────────
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# ── Docs ────────────────────────────────────────────────────
+README.md
+LICENSE
+*.md
+!data/sample_docs/*.md

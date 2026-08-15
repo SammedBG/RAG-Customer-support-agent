@@ -3,14 +3,15 @@ import axios from 'axios';
 import { HealthStatus } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_KEY = import.meta.env.VITE_API_KEY || 'dev-key-change-me-in-production';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': 'dev-key-change-me-in-production',
+    'X-API-Key': API_KEY,
   },
-  timeout: 10000,
+  timeout: 30000, // 30s to handle Render free-tier cold starts
 });
 
 export async function checkSystemHealth(): Promise<HealthStatus> {

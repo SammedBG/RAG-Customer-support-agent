@@ -59,8 +59,8 @@ def create_app() -> FastAPI:
         ),
         version="1.0.0",
         lifespan=lifespan,
-        docs_url="/docs" if not settings.is_production else None,
-        redoc_url="/redoc" if not settings.is_production else None,
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
 
     # ── Rate limiter ─────────────────────────────────────────
@@ -122,6 +122,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "src.api.main:app",
         host=settings.app_host,
-        port=settings.app_port,
+        port=settings.effective_port,
         reload=settings.app_debug,
     )
