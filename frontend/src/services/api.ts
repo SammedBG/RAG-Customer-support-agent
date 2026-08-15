@@ -2,7 +2,11 @@
 import axios from 'axios';
 import { HealthStatus } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+// Prefer relative '/api/v1' to use Vercel's edge proxy rewrite (bypasses browser CORS)
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_BASE_URL = rawBaseUrl.startsWith('http') && window.location.hostname.includes('vercel.app')
+  ? '/api/v1'
+  : rawBaseUrl;
 const API_KEY = import.meta.env.VITE_API_KEY || 'dev-key-change-me-in-production';
 
 export const apiClient = axios.create({

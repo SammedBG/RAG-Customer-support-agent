@@ -69,8 +69,8 @@ class Settings(BaseSettings):
     )
     log_level: str = Field(default="INFO")
     cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:5173",
-        description="Comma-separated allowed CORS origins",
+        default="*",
+        description="Comma-separated allowed CORS origins (defaults to wildcard '*' for seamless deployment)",
     )
 
     # ── Ingestion ───────────────────────────────────────────────
