@@ -32,27 +32,43 @@ export default function KnowledgeBase() {
   }, []);
 
   const loadDocs = async () => {
-    const docs = await fetchDocuments();
-    setDocuments(docs);
+    try {
+      const docs = await fetchDocuments();
+      setDocuments(docs);
+    } catch (err) {
+      console.warn('Backend offline — no documents available');
+      setDocuments([]);
+    }
   };
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setIsUploading(true);
-    const file = files[0];
-    await uploadDocument(file);
-    await loadDocs();
+    try {
+      await uploadDocument(files[0]);
+      await loadDocs();
+    } catch (err) {
+      alert('Upload failed — backend is not connected.');
+    }
     setIsUploading(false);
   };
 
   const handleDelete = async (doc: DocumentItem) => {
-    await deleteDocument(doc.id, doc.name);
-    await loadDocs();
+    try {
+      await deleteDocument(doc.id, doc.name);
+      await loadDocs();
+    } catch (err) {
+      alert('Delete failed — backend is not connected.');
+    }
   };
 
   const handleReindex = async (doc: DocumentItem) => {
-    await reindexDocument(doc.id, doc.name);
-    await loadDocs();
+    try {
+      await reindexDocument(doc.id, doc.name);
+      await loadDocs();
+    } catch (err) {
+      alert('Reindex failed — backend is not connected.');
+    }
   };
 
   return (
