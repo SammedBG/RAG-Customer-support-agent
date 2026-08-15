@@ -279,40 +279,75 @@ def _build_document_info(source_file: str, source_path: str, ingested_at: str, c
     "/documents",
     response_model=DocumentListResponse,
     summary="List ingested documents",
-    description="Get a list of all ingested documents with metadata.",
+    description="Get a list of all ingested documents directly from Qdrant Cloud and local metadata.",
 )
 async def list_documents(
     user: AuthUser = Depends(get_current_user),
 ):
-    """List all documents that have been ingested."""
-    metadata_db = Path("data/metadata.db")
+    """List all documents that have been ingested into Qdrant Cloud."""
+    documents_map: dict[str, dict[str, Any]] = {}
 
-    if not metadata_db.exists():
-        return DocumentListResponse(documents=[], total=0)
-
+    # 1. Read persistent metadata from Qdrant Cloud
     try:
-        conn = sqlite3.connect(str(metadata_db))
-        cursor = conn.execute(
-            "SELECT source_file, source_path, ingested_at, chunk_count FROM ingested_docs ORDER BY ingested_at DESC"
+        from config.settings import get_qdrant_client, get_settings
+        settings = get_settings()
+        qdrant = get_qdrant_client()
+
+        scroll_res, _ = qdrant.scroll(
+            collection_name=settings.qdrant_collection_name,
+            limit=250,
+            with_payload=True,
+            with_vectors=False,
         )
-        rows = cursor.fetchall()
-        conn.close()
 
-        documents = [
-            _build_document_info(
-                source_file=row[0],
-                source_path=row[1],
-                ingested_at=row[2],
-                chunk_count=row[3],
-            )
-            for row in rows
-        ]
-
-        return DocumentListResponse(documents=documents, total=len(documents))
-
+        for point in scroll_res:
+            payload = point.payload or {}
+            source_file = payload.get("source_file") or payload.get("filename")
+            if source_file and source_file not in documents_map:
+                documents_map[source_file] = {
+                    "source_file": source_file,
+                    "source_path": payload.get("source_path") or f"data/sample_docs/{source_file}",
+                    "ingested_at": payload.get("ingested_at") or "Persisted in Qdrant",
+                    "chunk_count": 1,
+                }
+            elif source_file in documents_map:
+                documents_map[source_file]["chunk_count"] += 1
     except Exception as e:
-        logger.error("list_documents_failed", error=str(e))
-        return DocumentListResponse(documents=[], total=0)
+        logger.warning("qdrant_document_fetch_failed", error=str(e))
+
+    # 2. Also check local SQLite DB if present
+    metadata_db = Path("data/metadata.db")
+    if metadata_db.exists():
+        try:
+            conn = sqlite3.connect(str(metadata_db))
+            cursor = conn.execute(
+                "SELECT source_file, source_path, ingested_at, chunk_count FROM ingested_docs ORDER BY ingested_at DESC"
+            )
+            rows = cursor.fetchall()
+            conn.close()
+            for row in rows:
+                sf = row[0]
+                if sf not in documents_map:
+                    documents_map[sf] = {
+                        "source_file": sf,
+                        "source_path": row[1],
+                        "ingested_at": row[2],
+                        "chunk_count": row[3],
+                    }
+        except Exception as e:
+            logger.warning("sqlite_document_fetch_failed", error=str(e))
+
+    document_infos = [
+        _build_document_info(
+            source_file=data["source_file"],
+            source_path=data["source_path"],
+            ingested_at=data["ingested_at"],
+            chunk_count=data["chunk_count"],
+        )
+        for data in documents_map.values()
+    ]
+
+    return DocumentListResponse(documents=document_infos, total=len(document_infos))
 
 
 @router.post(
