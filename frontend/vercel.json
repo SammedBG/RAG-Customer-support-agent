@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR_RENDER_URL.onrender.com/api/:path*"
+      "destination": "https://rag-customer-support-agent.onrender.com/api/:path*"
     },
     {
       "source": "/((?!api/).*)",
