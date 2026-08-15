@@ -7,7 +7,7 @@ const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const API_BASE_URL = rawBaseUrl.startsWith('http') && window.location.hostname.includes('vercel.app')
   ? '/api/v1'
   : rawBaseUrl;
-const API_KEY = import.meta.env.VITE_API_KEY || 'dev-key-change-me-in-production';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

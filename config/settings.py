@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # ── Security ────────────────────────────────────────────────
     api_keys: str = Field(
         default="dev-key-change-me-in-production",
-        description="Comma-separated valid API keys",
+        description="Comma-separated valid API keys. In production, override via API_KEYS env var.",
     )
     jwt_secret: str = Field(default="your-jwt-secret-change-me-in-production")
     jwt_algorithm: str = Field(default="HS256")
@@ -69,8 +69,8 @@ class Settings(BaseSettings):
     )
     log_level: str = Field(default="INFO")
     cors_origins: str = Field(
-        default="*",
-        description="Comma-separated allowed CORS origins (defaults to wildcard '*' for seamless deployment)",
+        default="http://localhost:3000,http://localhost:5173",
+        description="Comma-separated allowed CORS origins. In production, override via CORS_ORIGINS env var.",
     )
 
     # ── Ingestion ───────────────────────────────────────────────
