@@ -43,6 +43,13 @@ RUN mkdir -p data/qdrant_storage logs
 COPY scripts/startup.sh ./scripts/startup.sh
 RUN chmod +x ./scripts/startup.sh
 
+# Thread limits for 512MB RAM free tier
+ENV OMP_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV VECLIB_MAXIMUM_THREADS=1
+ENV NUMEXPR_NUM_THREADS=1
+
 # Default port (Render overrides via $PORT)
 ENV PORT=8000
 EXPOSE ${PORT}
