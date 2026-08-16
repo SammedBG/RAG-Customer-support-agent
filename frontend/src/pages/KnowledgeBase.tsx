@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   UploadCloud,
@@ -15,6 +15,7 @@ import {
   fetchDocuments,
   uploadDocument,
   deleteDocument,
+  deleteAllDocuments,
   reindexDocument,
 } from '../services/documents.service';
 import DocumentDrawer from '../components/knowledge/DocumentDrawer';
@@ -26,6 +27,7 @@ export default function KnowledgeBase() {
   const [isUploading, setIsUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     loadDocs();
@@ -62,6 +64,18 @@ export default function KnowledgeBase() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL documents? This will completely reset the knowledge base.')) return;
+    setIsClearing(true);
+    try {
+      await deleteAllDocuments();
+      setDocuments([]);
+    } catch (err) {
+      alert('Failed to clear knowledge base — backend is not connected.');
+    }
+    setIsClearing(false);
+  };
+
   const handleReindex = async (doc: DocumentItem) => {
     try {
       await reindexDocument(doc.id, doc.name);
@@ -87,13 +101,25 @@ export default function KnowledgeBase() {
           </p>
         </div>
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-lime-400 text-slate-950 font-bold text-sm hover:bg-lime-300 transition-all shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Upload Documents
-        </button>
+        <div className="flex items-center gap-3">
+          {documents.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              disabled={isClearing}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-rose-300 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-all disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              {isClearing ? 'Clearing...' : 'Clear All'}
+            </button>
+          )}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-lime-400 text-slate-950 font-bold text-sm hover:bg-lime-300 transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Upload Documents
+          </button>
+        </div>
         <input
           type="file"
           ref={fileInputRef}
@@ -154,7 +180,7 @@ export default function KnowledgeBase() {
           <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
             Indexed Documents ({documents.length})
           </h3>
-          <span className="text-xs text-slate-500 font-mono">Qdrant Collection: customer_support_docs</span>
+          <span className="text-xs text-slate-500 font-mono">Qdrant Cloud — Live Vector Index</span>
         </div>
 
         <div className="overflow-x-auto">

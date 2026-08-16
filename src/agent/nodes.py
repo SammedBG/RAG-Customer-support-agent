@@ -61,7 +61,7 @@ def _get_llm() -> Any:
             _llm = FakeListChatModel(
                 responses=[
                     "retrieve",
-                    "Eligible TechNova products can be returned within 30 days of delivery. [1]",
+                    "Based on the uploaded documents, here is the relevant information. [1]",
                     "grounded",
                 ]
             )
@@ -335,13 +335,12 @@ def fallback(state: AgentState) -> dict[str, Any]:
     )
 
     fallback_message = (
-        "I apologize, but I'm unable to find a reliable answer to your question "
-        "in our current documentation. To ensure you receive accurate information, "
-        "I recommend reaching out to our support team:\n\n"
-        "- **Email**: support@technova.com\n"
-        "- **Phone**: 1-800-TECHNOVA (Mon-Fri 8AM-8PM EST)\n"
-        "- **Live Chat**: Available 24/7 at technova.com/support\n\n"
-        "They'll be happy to help you with your specific question."
+        "I wasn't able to find a sufficiently relevant answer in the currently uploaded documents. "
+        "Here are a few things you can try:\n\n"
+        "- **Upload more documents** — Make sure the knowledge base contains documents related to your question.\n"
+        "- **Rephrase your question** — Try asking in a different way or be more specific.\n"
+        "- **Check document status** — Ensure your uploaded documents have finished processing (status: Indexed).\n\n"
+        "I can only answer questions based on the documents that have been uploaded to the knowledge base."
     )
 
     return {

@@ -22,10 +22,10 @@ import RagTraceViewer from '../components/chat/RagTraceViewer';
 import { ChatMessage, Conversation, Citation, HealthStatus } from '../types';
 
 const SUGGESTED_QUESTIONS = [
-  'What is the return policy for TechNova products?',
-  'How much does overnight shipping cost?',
-  "My SmartHome Hub won't connect to Wi-Fi.",
-  'What SmartHome Hub models are available?',
+  'Summarize the key points from my uploaded documents.',
+  'What are the main topics covered in the knowledge base?',
+  'Can you explain the details mentioned in the documents?',
+  'What policies or guidelines are described in the files?',
 ];
 
 export default function LiveAgent() {

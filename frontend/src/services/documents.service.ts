@@ -29,3 +29,8 @@ export async function reindexDocument(id: string, name?: string): Promise<boolea
   await apiClient.post(`/documents/${target}/reindex`);
   return true;
 }
+
+export async function deleteAllDocuments(): Promise<{ message: string; details: string[] }> {
+  const res = await apiClient.delete('/documents');
+  return res.data;
+}

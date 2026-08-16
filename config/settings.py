@@ -153,7 +153,7 @@ def get_qdrant_client(url: Optional[str] = None, api_key: Optional[str] = None):
     target_key = api_key or settings.qdrant_api_key or None
 
     try:
-        client = QdrantClient(url=target_url, api_key=target_key, timeout=3)
+        client = QdrantClient(url=target_url, api_key=target_key, timeout=60)
         client.get_collections()
         return client
     except Exception:

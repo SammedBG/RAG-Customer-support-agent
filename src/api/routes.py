@@ -459,6 +459,74 @@ async def delete_document(
     return {"status": "success", "message": f"Deleted {filename}"}
 
 
+@router.delete(
+    "/documents",
+    summary="Delete ALL documents and reset the knowledge base",
+    description="Removes every document from Qdrant Cloud, local SQLite metadata, and the file system. Use this to start fresh.",
+)
+async def delete_all_documents(
+    user: AuthUser = Depends(get_current_user),
+):
+    """Wipe all data: Qdrant collection points, SQLite metadata, and uploaded files."""
+    deleted_sources = []
+
+    # 1. Delete ALL points from Qdrant collection (delete the collection and re-create)
+    try:
+        from config.settings import get_qdrant_client, get_settings
+
+        settings = get_settings()
+        qdrant = get_qdrant_client()
+
+        # Check if collection exists
+        collections = [c.name for c in qdrant.get_collections().collections]
+        if settings.qdrant_collection_name in collections:
+            # Get count before deletion
+            info = qdrant.get_collection(settings.qdrant_collection_name)
+            old_count = info.points_count or 0
+
+            # Delete the entire collection
+            qdrant.delete_collection(settings.qdrant_collection_name)
+            logger.info("qdrant_collection_deleted", name=settings.qdrant_collection_name, points=old_count)
+            deleted_sources.append(f"Qdrant: {old_count} vectors deleted")
+        else:
+            deleted_sources.append("Qdrant: collection not found (already clean)")
+    except Exception as e:
+        logger.error("qdrant_wipe_failed", error=str(e))
+        deleted_sources.append(f"Qdrant: error — {str(e)}")
+
+    # 2. Clear SQLite metadata
+    metadata_db = Path("data/metadata.db")
+    if metadata_db.exists():
+        try:
+            conn = sqlite3.connect(str(metadata_db))
+            conn.execute("DELETE FROM ingested_docs")
+            conn.commit()
+            conn.close()
+            deleted_sources.append("SQLite: metadata cleared")
+        except Exception as e:
+            logger.warning("sqlite_wipe_failed", error=str(e))
+            deleted_sources.append(f"SQLite: error — {str(e)}")
+
+    # 3. Delete all files in the uploads directory
+    upload_dir = Path("data/sample_docs")
+    if upload_dir.exists():
+        file_count = 0
+        for f in upload_dir.iterdir():
+            if f.is_file():
+                f.unlink()
+                file_count += 1
+        deleted_sources.append(f"Files: {file_count} files deleted")
+
+    logger.info("full_knowledge_base_reset", actions=deleted_sources)
+
+    return {
+        "status": "success",
+        "message": "Knowledge base has been completely reset. Upload new documents to get started.",
+        "details": deleted_sources,
+    }
+
+
+
 @router.post(
     "/documents/{filename}/reindex",
     summary="Reindex a document",

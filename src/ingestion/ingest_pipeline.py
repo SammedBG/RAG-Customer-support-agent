@@ -242,8 +242,8 @@ class IngestionPipeline:
             )
             points.append(point)
 
-        # Batch upsert
-        batch_size = 100
+        # Batch upsert in small batches of 10 points for reliable cloud network delivery
+        batch_size = 10
         for i in range(0, len(points), batch_size):
             batch = points[i : i + batch_size]
             self.qdrant.upsert(
