@@ -19,6 +19,25 @@ from config.settings import get_settings
 
 logger = get_logger(__name__)
 
+_dense_embedder_instance: Optional[DenseEmbedder] = None
+_sparse_embedder_instance: Optional[SparseEmbedder] = None
+
+
+def get_dense_embedder() -> DenseEmbedder:
+    """Get or create singleton DenseEmbedder to avoid loading multiple ONNX models into memory."""
+    global _dense_embedder_instance
+    if _dense_embedder_instance is None:
+        _dense_embedder_instance = DenseEmbedder()
+    return _dense_embedder_instance
+
+
+def get_sparse_embedder() -> SparseEmbedder:
+    """Get or create singleton SparseEmbedder to avoid loading multiple BM25 models into memory."""
+    global _sparse_embedder_instance
+    if _sparse_embedder_instance is None:
+        _sparse_embedder_instance = SparseEmbedder()
+    return _sparse_embedder_instance
+
 
 class DenseEmbedder:
     """Generate dense embeddings using OpenAI API or local FastEmbed model fallback."""
@@ -34,7 +53,7 @@ class DenseEmbedder:
             logger.info("dense_embedder_initialized_openai", model=self.model)
         else:
             self.client = None
-            self.local_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+            self.local_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5", threads=1)
             logger.info("dense_embedder_initialized_fastembed_fallback", model="BAAI/bge-small-en-v1.5")
 
     def embed_texts(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
@@ -70,7 +89,7 @@ class SparseEmbedder:
     """Generate sparse embeddings using FastEmbed for BM25-style keyword matching."""
 
     def __init__(self, model_name: str = "Qdrant/bm25"):
-        self.model = SparseTextEmbedding(model_name=model_name)
+        self.model = SparseTextEmbedding(model_name=model_name, threads=1)
         logger.info("sparse_embedder_initialized", model=model_name)
 
     def embed_texts(self, texts: list[str]) -> list[dict]:

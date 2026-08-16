@@ -36,9 +36,12 @@ from src.security.auth import AuthUser, get_current_user
 from src.security.rate_limiter import get_rate_limit_string, limiter
 from src.security.sanitizer import sanitize_input
 
+import threading
+
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["RAG Agent"])
+_upload_ingest_lock = threading.Lock()
 
 
 @router.post(
@@ -377,20 +380,21 @@ async def upload_document(
 
     logger.info("document_uploaded", filename=filename, size=len(content))
 
-    # Run ingestion in background thread to avoid OOM during the HTTP request
+    # Run ingestion in background thread with a lock to avoid concurrent OOM on 512MB RAM
     import gc
     import threading
 
     def _ingest_in_background(target_dir: Path, target_file: str):
-        try:
-            from src.ingestion.ingest_pipeline import IngestionPipeline
-            pipeline = IngestionPipeline()
-            pipeline.run(data_dir=target_dir, force_reingest=True)
-            logger.info("background_ingestion_complete", filename=target_file)
-        except Exception as e:
-            logger.error("background_ingestion_failed", filename=target_file, error=str(e))
-        finally:
-            gc.collect()
+        with _upload_ingest_lock:
+            try:
+                from src.ingestion.ingest_pipeline import IngestionPipeline
+                pipeline = IngestionPipeline()
+                pipeline.run(data_dir=target_dir, force_reingest=True)
+                logger.info("background_ingestion_complete", filename=target_file)
+            except Exception as e:
+                logger.error("background_ingestion_failed", filename=target_file, error=str(e))
+            finally:
+                gc.collect()
 
     thread = threading.Thread(
         target=_ingest_in_background,
