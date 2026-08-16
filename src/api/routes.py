@@ -384,12 +384,12 @@ async def upload_document(
     import gc
     import threading
 
-    def _ingest_in_background(target_dir: Path, target_file: str):
+    def _ingest_in_background(target_file_path: Path, target_file: str):
         with _upload_ingest_lock:
             try:
                 from src.ingestion.ingest_pipeline import IngestionPipeline
                 pipeline = IngestionPipeline()
-                pipeline.run(data_dir=target_dir, force_reingest=True)
+                pipeline.run(data_dir=target_file_path, force_reingest=True)
                 logger.info("background_ingestion_complete", filename=target_file)
             except Exception as e:
                 logger.error("background_ingestion_failed", filename=target_file, error=str(e))
@@ -398,7 +398,7 @@ async def upload_document(
 
     thread = threading.Thread(
         target=_ingest_in_background,
-        args=(upload_dir, filename),
+        args=(file_path, filename),
         daemon=True,
     )
     thread.start()

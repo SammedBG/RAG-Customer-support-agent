@@ -57,9 +57,12 @@ class DenseEmbedder:
             logger.info("dense_embedder_initialized_fastembed_fallback", model="BAAI/bge-small-en-v1.5")
 
     def embed_texts(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
+        import gc
         if self.local_model:
             embeddings_generator = self.local_model.embed(texts)
-            return [emb.tolist() for emb in embeddings_generator]
+            res = [emb.tolist() for emb in embeddings_generator]
+            gc.collect()
+            return res
 
         all_embeddings: list[list[float]] = []
         for i in range(0, len(texts), batch_size):
@@ -71,12 +74,16 @@ class DenseEmbedder:
             batch_embeddings = [item.embedding for item in response.data]
             all_embeddings.extend(batch_embeddings)
 
+        gc.collect()
         return all_embeddings
 
     def embed_query(self, query: str) -> list[float]:
+        import gc
         if self.local_model:
             embeddings_generator = self.local_model.embed([query])
-            return next(embeddings_generator).tolist()
+            res = next(embeddings_generator).tolist()
+            gc.collect()
+            return res
 
         response = self.client.embeddings.create(
             input=[query],
@@ -99,6 +106,7 @@ class SparseEmbedder:
         Returns:
             List of sparse vectors as dicts with 'indices' and 'values'.
         """
+        import gc
         sparse_embeddings = list(self.model.embed(texts))
 
         results = []
@@ -111,13 +119,17 @@ class SparseEmbedder:
             )
 
         logger.info("sparse_embeddings_generated", count=len(results))
+        gc.collect()
         return results
 
     def embed_query(self, query: str) -> dict:
         """Generate a sparse embedding for a single query."""
+        import gc
         embeddings = list(self.model.embed([query]))
         embedding = embeddings[0]
-        return {
+        res = {
             "indices": embedding.indices.tolist(),
             "values": embedding.values.tolist(),
         }
+        gc.collect()
+        return res

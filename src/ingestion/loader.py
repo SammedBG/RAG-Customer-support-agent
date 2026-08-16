@@ -30,10 +30,10 @@ def load_documents(
     required_exts: Optional[list[str]] = None,
 ) -> list[Document]:
     """
-    Load documents from a directory with rich metadata.
+    Load documents from a directory or a single file with rich metadata.
 
     Args:
-        data_dir: Path to the directory containing documents.
+        data_dir: Path to the directory or file containing documents.
         required_exts: Optional list of file extensions to include (e.g., [".md", ".txt", ".pdf"]).
 
     Returns:
@@ -41,28 +41,30 @@ def load_documents(
     """
     data_path = Path(data_dir)
     if not data_path.exists():
-        msg = f"Data directory does not exist: {data_path}"
+        msg = f"Data path does not exist: {data_path}"
         raise FileNotFoundError(msg)
-
-    if not data_path.is_dir():
-        msg = f"Path is not a directory: {data_path}"
-        raise NotADirectoryError(msg)
 
     if required_exts is None:
         required_exts = [".md", ".txt", ".pdf", ".docx"]
 
     logger.info(
         "loading_documents",
-        data_dir=str(data_path),
-        required_exts=required_exts,
+        data_path=str(data_path),
+        is_file=data_path.is_file(),
     )
 
-    reader = SimpleDirectoryReader(
-        input_dir=str(data_path),
-        required_exts=required_exts,
-        recursive=True,
-        filename_as_id=True,
-    )
+    if data_path.is_file():
+        reader = SimpleDirectoryReader(
+            input_files=[str(data_path)],
+            filename_as_id=True,
+        )
+    else:
+        reader = SimpleDirectoryReader(
+            input_dir=str(data_path),
+            required_exts=required_exts,
+            recursive=True,
+            filename_as_id=True,
+        )
 
     raw_docs = reader.load_data()
     logger.info("raw_documents_loaded", count=len(raw_docs))

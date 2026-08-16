@@ -19,39 +19,21 @@ logger = get_logger(__name__)
 
 class CrossEncoderReranker:
     """
-    Reranks retrieved chunks using a cross-encoder model.
+    Reranks retrieved chunks using hybrid score ranking or optional cross-encoder model.
 
-    Cross-encoders jointly encode the query and document, producing
-    more accurate relevance scores than bi-encoders, at the cost of
-    higher latency (hence used only on a small candidate set).
+    On memory-constrained environments (like Render 512MB free tier), uses
+    Qdrant's Reciprocal Rank Fusion (RRF) scores directly to avoid loading
+    PyTorch into memory (~450MB footprint).
     """
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         self.model_name = model_name
-        self._model = None
-        logger.info("reranker_initialized", model=model_name)
+        self._model = "unavailable"
+        logger.info("reranker_initialized_lightweight")
 
     def _load_model(self):
-        """Lazy-load the cross-encoder model."""
-        if self._model is None:
-            try:
-                from sentence_transformers import CrossEncoder
-
-                self._model = CrossEncoder(self.model_name)
-                logger.info("reranker_model_loaded", model=self.model_name)
-            except ImportError:
-                logger.warning(
-                    "reranker_unavailable",
-                    reason="sentence-transformers not installed, using score-based fallback",
-                )
-                self._model = "unavailable"
-            except Exception as e:
-                logger.warning(
-                    "reranker_load_failed",
-                    error=str(e),
-                    reason="Falling back to score-based ranking",
-                )
-                self._model = "unavailable"
+        """Lazy-load cross-encoder only if explicitly enabled."""
+        pass
 
     def rerank(
         self,

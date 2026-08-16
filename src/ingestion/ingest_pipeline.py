@@ -273,5 +273,9 @@ class IngestionPipeline:
             "points_upserted": len(points),
         }
 
+        import gc
+        del points, child_nodes, parent_nodes, dense_embeddings, sparse_embeddings
+        gc.collect()
+
         logger.info("ingestion_complete", **summary)
         return summary
