@@ -67,7 +67,11 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
-    # ── CORS ─────────────────────────────────────────────────
+    # ── Custom Middleware (order matters — outermost last in Starlette) ──
+    app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
+
+    # ── CORS (Added last so it is the OUTERMOST layer intercepting all requests) ──
     cors_origins = settings.cors_origins_list
     allow_all = "*" in cors_origins or settings.cors_origins.strip() == "*"
 
@@ -79,15 +83,12 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"] if allow_all else cors_origins,
-        allow_credentials=not allow_all,
+        allow_origin_regex=r"https://.*\.vercel\.app" if not allow_all else None,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["X-Correlation-ID", "X-Response-Time-Ms"],
     )
-
-    # ── Custom Middleware (order matters — outermost first) ──
-    app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(CorrelationIdMiddleware)
 
     # ── Routes ───────────────────────────────────────────────
     app.include_router(router)
