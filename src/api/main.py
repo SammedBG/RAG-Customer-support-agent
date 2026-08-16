@@ -71,6 +71,11 @@ def create_app() -> FastAPI:
     cors_origins = settings.cors_origins_list
     allow_all = "*" in cors_origins or settings.cors_origins.strip() == "*"
 
+    # Always allow the production frontend, even if CORS_ORIGINS env var is misconfigured
+    PRODUCTION_FRONTEND = "https://rag-customer-support-agent.vercel.app"
+    if not allow_all and PRODUCTION_FRONTEND not in cors_origins:
+        cors_origins.append(PRODUCTION_FRONTEND)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"] if allow_all else cors_origins,
