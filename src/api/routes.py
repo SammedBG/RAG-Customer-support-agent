@@ -354,13 +354,13 @@ async def list_documents(
     "/documents",
     response_model=DocumentInfo,
     summary="Upload and ingest a document",
-    description="Upload a document file (Markdown, TXT, PDF, DOCX) to be stored and ingested into Qdrant.",
+    description="Upload a document file (Markdown, TXT, PDF, DOCX). File is saved and ingestion runs in the background.",
 )
 async def upload_document(
     file: UploadFile = File(...),
     user: AuthUser = Depends(get_current_user),
 ):
-    """Upload a new document file and trigger ingestion into vector storage."""
+    """Upload a new document file. Ingestion into vector storage runs as a background task."""
     if not file.filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -377,28 +377,36 @@ async def upload_document(
 
     logger.info("document_uploaded", filename=filename, size=len(content))
 
-    from src.ingestion.ingest_pipeline import IngestionPipeline
+    # Run ingestion in background thread to avoid OOM during the HTTP request
+    import gc
+    import threading
 
-    pipeline = IngestionPipeline()
-    result = pipeline.run(data_dir=upload_dir, force_reingest=True)
+    def _ingest_in_background(target_dir: Path, target_file: str):
+        try:
+            from src.ingestion.ingest_pipeline import IngestionPipeline
+            pipeline = IngestionPipeline()
+            pipeline.run(data_dir=target_dir, force_reingest=True)
+            logger.info("background_ingestion_complete", filename=target_file)
+        except Exception as e:
+            logger.error("background_ingestion_failed", filename=target_file, error=str(e))
+        finally:
+            gc.collect()
 
-    metadata_db = Path("data/metadata.db")
-    chunk_count = result.get("child_chunks", 10)
-    ingested_at = "Just now"
+    thread = threading.Thread(
+        target=_ingest_in_background,
+        args=(upload_dir, filename),
+        daemon=True,
+    )
+    thread.start()
 
-    if metadata_db.exists():
-        conn = sqlite3.connect(str(metadata_db))
-        cursor = conn.execute(
-            "SELECT source_path, ingested_at, chunk_count FROM ingested_docs WHERE source_file = ?",
-            (filename,),
-        )
-        row = cursor.fetchone()
-        conn.close()
-        if row:
-            ingested_at = row[1]
-            chunk_count = row[2]
-
-    return _build_document_info(filename, str(file_path), ingested_at, chunk_count)
+    # Return immediately with "Ingesting" status
+    from datetime import datetime, timezone
+    return _build_document_info(
+        filename,
+        str(file_path),
+        datetime.now(timezone.utc).isoformat(),
+        0,  # chunk_count will update after background ingestion completes
+    )
 
 
 @router.delete(

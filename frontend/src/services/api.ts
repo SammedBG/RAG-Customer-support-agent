@@ -2,20 +2,16 @@
 import axios from 'axios';
 import { HealthStatus } from '../types';
 
-// Prefer relative '/api/v1' to use Vercel's edge proxy rewrite (bypasses browser CORS)
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-const API_BASE_URL = rawBaseUrl.startsWith('http') && window.location.hostname.includes('vercel.app')
-  ? '/api/v1'
-  : rawBaseUrl;
+// Direct connection to backend — set VITE_API_BASE_URL in Vercel env vars
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     'X-API-Key': API_KEY,
   },
-  timeout: 30000, // 30s to handle Render free-tier cold starts
+  timeout: 60000, // 60s to handle Render free-tier cold starts
 });
 
 export async function checkSystemHealth(): Promise<HealthStatus> {
