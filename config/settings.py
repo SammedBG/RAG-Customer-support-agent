@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # ── Groq & OpenAI ──────────────────────────────────────────
     groq_api_key: Optional[str] = Field(default=None, description="Groq API key")
     groq_chat_model: str = Field(
-        default="llama-3.3-70b-versatile",
+        default="groq/compound",
         description="Groq chat model name",
     )
     openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")

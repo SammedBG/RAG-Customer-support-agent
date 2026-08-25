@@ -32,18 +32,55 @@ _llm: Any | None = None
 _retriever: Retriever | None = None
 
 
+class SafeChatGroq:
+    """Wrapper around ChatGroq with automatic model fallback if a model is deprecated or not found."""
+
+    def __init__(self, primary_model: str, api_key: str, fallback_models: list[str] | None = None):
+        self.api_key = api_key
+        self.candidate_models = [primary_model] + [m for m in (fallback_models or ["groq/compound", "groq/compound-mini"]) if m != primary_model]
+        self._active_model = primary_model
+        self._llm = None
+        self._init_llm(self._active_model)
+
+    def _init_llm(self, model: str):
+        from langchain_groq import ChatGroq
+        self._active_model = model
+        self._llm = ChatGroq(
+            model=model,
+            api_key=self.api_key,
+            temperature=0.1,
+            max_tokens=1024,
+        )
+
+    def invoke(self, *args, **kwargs):
+        last_err = None
+        for model in self.candidate_models:
+            try:
+                if self._active_model != model:
+                    self._init_llm(model)
+                return self._llm.invoke(*args, **kwargs)
+            except Exception as e:
+                err_str = str(e).lower()
+                if "model_not_found" in err_str or "does not exist" in err_str or "decommissioned" in err_str or "404" in err_str:
+                    logger.warning("groq_model_fallback_triggered", failed_model=model, error=str(e))
+                    last_err = e
+                    continue
+                raise e
+        if last_err:
+            raise last_err
+        return self._llm.invoke(*args, **kwargs)
+
+
 def _get_llm() -> Any:
-    """Get or create the LLM singleton (Groq, OpenAI, or Mock fallback)."""
+    """Get or create the LLM singleton (Groq with fallback, OpenAI, or Mock fallback)."""
     global _llm
     if _llm is None:
         settings = get_settings()
         if settings.groq_api_key:
-            from langchain_groq import ChatGroq
-            _llm = ChatGroq(
-                model=settings.groq_chat_model,
+            _llm = SafeChatGroq(
+                primary_model=settings.groq_chat_model,
                 api_key=settings.groq_api_key,
-                temperature=0.1,
-                max_tokens=1024,
+                fallback_models=["groq/compound", "groq/compound-mini"],
             )
             logger.info("llm_initialized_groq", model=settings.groq_chat_model)
         elif settings.openai_api_key:
