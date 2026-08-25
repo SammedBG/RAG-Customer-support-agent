@@ -204,53 +204,53 @@ class IngestionPipeline:
         # Step 4: Chunk documents
         parent_nodes, child_nodes = chunk_documents(new_docs)
 
-        # Step 5: Generate embeddings for child nodes (used for retrieval)
-        child_texts = [node.text for node in child_nodes]
-        dense_embeddings = self.dense_embedder.embed_texts(child_texts)
-        sparse_embeddings = self.sparse_embedder.embed_texts(child_texts)
-
-        # Step 6: Upsert to Qdrant
-        points: list[PointStruct] = []
-        parent_map: dict[str, str] = {}  # parent_id -> parent_text
-
-        # Build parent text lookup
-        for parent_node in parent_nodes:
-            parent_map[parent_node.id_] = parent_node.text
-
-        for i, child_node in enumerate(child_nodes):
-            parent_id = child_node.metadata.get("parent_id", "")
-            parent_text = parent_map.get(parent_id, child_node.text)
-
-            payload = {
-                **child_node.metadata,
-                "text": child_node.text,
-                "parent_text": parent_text,
-            }
-
-            sparse_data = sparse_embeddings[i]
-
-            point = PointStruct(
-                id=abs(hash(child_node.id_)) % (2**63),  # Convert to positive int ID
-                vector={
-                    "dense": dense_embeddings[i],
-                    "sparse": SparseVector(
-                        indices=sparse_data["indices"],
-                        values=sparse_data["values"],
-                    ),
-                },
-                payload=payload,
-            )
-            points.append(point)
-
-        # Batch upsert in small batches of 10 points for reliable cloud network delivery
+        # Step 5 & 6: Generate embeddings and upsert to Qdrant in streaming batches of 10
+        import gc
         batch_size = 10
-        for i in range(0, len(points), batch_size):
-            batch = points[i : i + batch_size]
+        total_upserted = 0
+
+        for i in range(0, len(child_nodes), batch_size):
+            chunk_batch = child_nodes[i : i + batch_size]
+            batch_texts = [node.text for node in chunk_batch]
+
+            batch_dense = self.dense_embedder.embed_texts(batch_texts, batch_size=8)
+            batch_sparse = self.sparse_embedder.embed_texts(batch_texts, batch_size=8)
+
+            batch_points: list[PointStruct] = []
+            for j, child_node in enumerate(chunk_batch):
+                parent_id = child_node.metadata.get("parent_id", "")
+                parent_text = parent_map.get(parent_id, child_node.text)
+
+                payload = {
+                    **child_node.metadata,
+                    "text": child_node.text,
+                    "parent_text": parent_text,
+                }
+
+                sparse_data = batch_sparse[j]
+
+                point = PointStruct(
+                    id=abs(hash(child_node.id_)) % (2**63),  # Convert to positive int ID
+                    vector={
+                        "dense": batch_dense[j],
+                        "sparse": SparseVector(
+                            indices=sparse_data["indices"],
+                            values=sparse_data["values"],
+                        ),
+                    },
+                    payload=payload,
+                )
+                batch_points.append(point)
+
             self.qdrant.upsert(
                 collection_name=self.collection_name,
-                points=batch,
+                points=batch_points,
             )
-            logger.debug("batch_upserted", start=i, count=len(batch))
+            total_upserted += len(batch_points)
+            logger.debug("batch_upserted", start=i, count=len(batch_points))
+
+            del batch_points, batch_dense, batch_sparse, batch_texts, chunk_batch
+            gc.collect()
 
         # Step 7: Record ingestions
         for doc in new_docs:
@@ -270,11 +270,10 @@ class IngestionPipeline:
             "skipped": skipped,
             "parent_chunks": len(parent_nodes),
             "child_chunks": len(child_nodes),
-            "points_upserted": len(points),
+            "points_upserted": total_upserted,
         }
 
-        import gc
-        del points, child_nodes, parent_nodes, dense_embeddings, sparse_embeddings
+        del child_nodes, parent_nodes, parent_map
         gc.collect()
 
         logger.info("ingestion_complete", **summary)

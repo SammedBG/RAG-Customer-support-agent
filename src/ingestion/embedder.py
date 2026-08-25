@@ -56,13 +56,16 @@ class DenseEmbedder:
             self.local_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5", threads=1)
             logger.info("dense_embedder_initialized_fastembed_fallback", model="BAAI/bge-small-en-v1.5")
 
-    def embed_texts(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
+    def embed_texts(self, texts: list[str], batch_size: int = 8) -> list[list[float]]:
         import gc
         if self.local_model:
-            embeddings_generator = self.local_model.embed(texts)
-            res = [emb.tolist() for emb in embeddings_generator]
-            gc.collect()
-            return res
+            all_embeddings: list[list[float]] = []
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i : i + batch_size]
+                generator = self.local_model.embed(batch, batch_size=batch_size)
+                all_embeddings.extend([emb.tolist() for emb in generator])
+                gc.collect()
+            return all_embeddings
 
         all_embeddings: list[list[float]] = []
         for i in range(0, len(texts), batch_size):
@@ -73,14 +76,14 @@ class DenseEmbedder:
             )
             batch_embeddings = [item.embedding for item in response.data]
             all_embeddings.extend(batch_embeddings)
+            gc.collect()
 
-        gc.collect()
         return all_embeddings
 
     def embed_query(self, query: str) -> list[float]:
         import gc
         if self.local_model:
-            embeddings_generator = self.local_model.embed([query])
+            embeddings_generator = self.local_model.embed([query], batch_size=1)
             res = next(embeddings_generator).tolist()
             gc.collect()
             return res
@@ -99,33 +102,34 @@ class SparseEmbedder:
         self.model = SparseTextEmbedding(model_name=model_name, threads=1)
         logger.info("sparse_embedder_initialized", model=model_name)
 
-    def embed_texts(self, texts: list[str]) -> list[dict]:
+    def embed_texts(self, texts: list[str], batch_size: int = 8) -> list[dict]:
         """
-        Generate sparse embeddings for a list of texts.
+        Generate sparse embeddings for a list of texts in small memory-safe batches.
 
         Returns:
             List of sparse vectors as dicts with 'indices' and 'values'.
         """
         import gc
-        sparse_embeddings = list(self.model.embed(texts))
-
         results = []
-        for embedding in sparse_embeddings:
-            results.append(
-                {
-                    "indices": embedding.indices.tolist(),
-                    "values": embedding.values.tolist(),
-                }
-            )
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            sparse_embeddings = list(self.model.embed(batch, batch_size=batch_size))
+            for embedding in sparse_embeddings:
+                results.append(
+                    {
+                        "indices": embedding.indices.tolist(),
+                        "values": embedding.values.tolist(),
+                    }
+                )
+            gc.collect()
 
         logger.info("sparse_embeddings_generated", count=len(results))
-        gc.collect()
         return results
 
     def embed_query(self, query: str) -> dict:
         """Generate a sparse embedding for a single query."""
         import gc
-        embeddings = list(self.model.embed([query]))
+        embeddings = list(self.model.embed([query], batch_size=1))
         embedding = embeddings[0]
         res = {
             "indices": embedding.indices.tolist(),
