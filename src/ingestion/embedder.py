@@ -67,32 +67,37 @@ class DenseEmbedder:
                 gc.collect()
             return all_embeddings
 
-        all_embeddings: list[list[float]] = []
-        for i in range(0, len(texts), batch_size):
-            batch = texts[i : i + batch_size]
-            response = self.client.embeddings.create(
-                input=batch,
-                model=self.model,
-            )
-            batch_embeddings = [item.embedding for item in response.data]
-            all_embeddings.extend(batch_embeddings)
-            gc.collect()
+        if self.client:
+            all_embeddings: list[list[float]] = []
+            for i in range(0, len(texts), batch_size):
+                batch = texts[i : i + batch_size]
+                response = self.client.embeddings.create(
+                    input=batch,
+                    model=self.model,
+                )
+                batch_embeddings = [item.embedding for item in response.data]
+                all_embeddings.extend(batch_embeddings)
+                gc.collect()
+            return all_embeddings
 
-        return all_embeddings
+        return []
 
     def embed_query(self, query: str) -> list[float]:
         import gc
         if self.local_model:
-            embeddings_generator = self.local_model.embed([query], batch_size=1)
-            res = next(embeddings_generator).tolist()
+            embeddings_list = list(self.local_model.embed([query], batch_size=1))
+            res = embeddings_list[0].tolist()
             gc.collect()
             return res
 
-        response = self.client.embeddings.create(
-            input=[query],
-            model=self.model,
-        )
-        return response.data[0].embedding
+        if self.client:
+            response = self.client.embeddings.create(
+                input=[query],
+                model=self.model,
+            )
+            return response.data[0].embedding
+
+        return []
 
 
 class SparseEmbedder:

@@ -204,6 +204,9 @@ class IngestionPipeline:
         # Step 4: Chunk documents
         parent_nodes, child_nodes = chunk_documents(new_docs)
 
+        # Build parent text lookup map
+        parent_map: dict[str, str] = {node.id_: node.text for node in parent_nodes}
+
         # Step 5 & 6: Generate embeddings and upsert to Qdrant in streaming batches of 10
         import gc
         batch_size = 10
