@@ -39,7 +39,7 @@ class SafeChatGroq:
         self.api_key = api_key
         self.candidate_models = [primary_model] + [m for m in (fallback_models or ["groq/compound", "groq/compound-mini"]) if m != primary_model]
         self._active_model = primary_model
-        self._llm = None
+        self._llm: Any = None
         self._init_llm(self._active_model)
 
     def _init_llm(self, model: str):
@@ -52,13 +52,14 @@ class SafeChatGroq:
             max_tokens=1024,
         )
 
-    def invoke(self, *args, **kwargs):
+    def invoke(self, *args, **kwargs) -> Any:
         last_err = None
         for model in self.candidate_models:
             try:
-                if self._active_model != model:
+                if self._active_model != model or self._llm is None:
                     self._init_llm(model)
-                return self._llm.invoke(*args, **kwargs)
+                if self._llm is not None:
+                    return self._llm.invoke(*args, **kwargs)
             except Exception as e:
                 err_str = str(e).lower()
                 if "model_not_found" in err_str or "does not exist" in err_str or "decommissioned" in err_str or "404" in err_str:
@@ -68,7 +69,7 @@ class SafeChatGroq:
                 raise e
         if last_err:
             raise last_err
-        return self._llm.invoke(*args, **kwargs)
+        raise RuntimeError("No Groq models available for invocation")
 
 
 def _get_llm() -> Any:
