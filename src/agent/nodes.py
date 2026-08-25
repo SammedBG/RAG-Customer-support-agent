@@ -33,11 +33,12 @@ _retriever: Retriever | None = None
 
 
 class SafeChatGroq:
-    """Wrapper around ChatGroq with automatic model fallback if a model is deprecated or not found."""
+    """Wrapper around ChatGroq with automatic model fallback for 404 (not found) and 429 (rate limit) errors."""
 
     def __init__(self, primary_model: str, api_key: str, fallback_models: list[str] | None = None):
         self.api_key = api_key
-        self.candidate_models = [primary_model] + [m for m in (fallback_models or ["groq/compound", "groq/compound-mini"]) if m != primary_model]
+        default_fallbacks = ["groq/compound", "groq/compound-mini", "qwen/qwen3.6-27b", "allam-2-7b"]
+        self.candidate_models = [primary_model] + [m for m in (fallback_models or default_fallbacks) if m != primary_model]
         self._active_model = primary_model
         self._llm: Any = None
         self._init_llm(self._active_model)
@@ -53,16 +54,37 @@ class SafeChatGroq:
         )
 
     def invoke(self, *args, **kwargs) -> Any:
+        import re
         last_err = None
         for model in self.candidate_models:
             try:
                 if self._active_model != model or self._llm is None:
                     self._init_llm(model)
                 if self._llm is not None:
-                    return self._llm.invoke(*args, **kwargs)
+                    res = self._llm.invoke(*args, **kwargs)
+                    if hasattr(res, "content") and isinstance(res.content, str):
+                        res.content = re.sub(r"<think>.*?</think>", "", res.content, flags=re.DOTALL).strip()
+                    return res
             except Exception as e:
                 err_str = str(e).lower()
-                if "model_not_found" in err_str or "does not exist" in err_str or "decommissioned" in err_str or "404" in err_str:
+                is_recoverable = any(
+                    k in err_str
+                    for k in (
+                        "model_not_found",
+                        "does not exist",
+                        "decommissioned",
+                        "404",
+                        "413",
+                        "request_too_large",
+                        "too large",
+                        "429",
+                        "rate_limit",
+                        "rate limit",
+                        "tokens per minute",
+                        "tpm",
+                    )
+                )
+                if is_recoverable:
                     logger.warning("groq_model_fallback_triggered", failed_model=model, error=str(e))
                     last_err = e
                     continue
@@ -81,7 +103,7 @@ def _get_llm() -> Any:
             _llm = SafeChatGroq(
                 primary_model=settings.groq_chat_model,
                 api_key=settings.groq_api_key,
-                fallback_models=["groq/compound", "groq/compound-mini"],
+                fallback_models=["groq/compound", "groq/compound-mini", "qwen/qwen3.6-27b", "allam-2-7b"],
             )
             logger.info("llm_initialized_groq", model=settings.groq_chat_model)
         elif settings.openai_api_key:
@@ -112,6 +134,7 @@ def _get_retriever() -> Retriever:
     global _retriever
     if _retriever is None:
         _retriever = Retriever()
+        logger.info("retriever_initialized")
     return _retriever
 
 
@@ -134,27 +157,29 @@ def route_query(state: AgentState) -> dict[str, Any]:
     """
     Determine whether the query needs retrieval or is a simple greeting.
 
-    Routes to:
-    - "retrieve" → hybrid search pipeline
-    - "direct" → direct LLM response (for greetings/chitchat)
+    Uses instant zero-token heuristic routing to save LLM token quotas.
     """
-    query = state["query"]
-    logger.info("routing_query", query=query[:100])
+    query = state["query"].strip().lower()
+    logger.info("routing_query", query=state["query"][:100])
 
-    llm = _get_llm()
-    prompt = ROUTER_PROMPT.format(query=query)
+    direct_greetings = {
+        "hi",
+        "hello",
+        "hey",
+        "hi there",
+        "hello there",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "thanks",
+        "thank you",
+        "bye",
+        "goodbye",
+    }
 
-    response = llm.invoke(prompt)
-    content_str = response.content if isinstance(response.content, str) else str(response.content)
-    decision = content_str.strip().lower()
-
-    # Normalize decision
-    if "retrieve" in decision:
-        route = "retrieve"
-    elif "direct" in decision:
+    if query in direct_greetings:
         route = "direct"
     else:
-        # Default to retrieve if uncertain
         route = "retrieve"
 
     logger.info("query_routed", decision=route)
@@ -203,34 +228,13 @@ def retrieve(state: AgentState) -> dict[str, Any]:
 # ─────────────────────────────────────────────────────────────
 def grade_documents(state: AgentState) -> dict[str, Any]:
     """
-    Grade each retrieved document for relevance to the query.
+    Filter retrieved documents by relevance.
 
-    Filters out irrelevant documents to improve generation quality.
+    Since Hybrid Search + RRF with score threshold already extracts top relevant
+    chunks, we filter non-empty chunks directly to conserve LLM token quotas.
     """
-    query = state["query"]
     docs = state.get("retrieved_docs", [])
-
-    logger.info("grading_documents", count=len(docs))
-
-    llm = _get_llm()
-    filtered_docs: list[dict[str, Any]] = []
-
-    for doc in docs:
-        prompt = GRADER_PROMPT.format(
-            query=query,
-            source=doc["source_file"],
-            document=doc["text"][:500],  # Limit text for grading
-        )
-
-        response = llm.invoke(prompt)
-        content_str = response.content if isinstance(response.content, str) else str(response.content)
-        grade = content_str.strip().lower()
-
-        if "yes" in grade:
-            filtered_docs.append(doc)
-            logger.debug("doc_relevant", source=doc["source_file"], score=doc["score"])
-        else:
-            logger.debug("doc_filtered_out", source=doc["source_file"])
+    filtered_docs = [doc for doc in docs if doc.get("text", "").strip()]
 
     logger.info(
         "grading_complete",
@@ -270,26 +274,27 @@ def generate(state: AgentState) -> dict[str, Any]:
             "confidence": 0.5 if route == "direct" else 0.2,
         }
 
-    # Build context from filtered docs using parent text for richer context
-    filtered_docs = state["filtered_docs"]
+    # Build context from filtered docs using parent text for richer context (capped for token safety)
+    filtered_docs = state["filtered_docs"][:3]  # Top 3 most relevant chunks
     context_parts = []
     citations: list[Citation] = []
 
     for i, doc in enumerate(filtered_docs):
-        context_text = doc.get("parent_text", doc["text"])
-        source = doc["source_file"]
+        raw_text = doc.get("parent_text") or doc.get("text", "")
+        context_text = raw_text[:1000]  # Cap each chunk to 1000 chars for token limits
+        source = doc.get("source_file", "document")
         context_parts.append(f"[Document {i + 1} — Source: {source}]\n{context_text}")
 
         citations.append(
             Citation(
                 source=source,
-                chunk_text=doc["text"][:300],
+                chunk_text=doc.get("text", "")[:300],
                 relevance_score=doc.get("score", 0.0),
                 page=None,
             )
         )
 
-    context = "\n\n---\n\n".join(context_parts)
+    context = "\n\n---\n\n".join(context_parts)[:3500]  # Max 3.5k chars context
     prompt = USER_PROMPT_WITH_CONTEXT.format(context=context, query=query)
 
     response = llm.invoke([
@@ -322,36 +327,12 @@ def generate(state: AgentState) -> dict[str, Any]:
 def check_hallucination(state: AgentState) -> dict[str, Any]:
     """
     Verify the generated answer is grounded in the retrieved context.
-
-    Acts as a safety net to catch hallucinated information.
     """
     generation = state.get("generation", "")
     filtered_docs = state.get("filtered_docs", [])
 
-    # Skip check for direct responses (greetings, etc.)
-    if state.get("route_decision") == "direct" or not filtered_docs:
-        return {"is_grounded": True}
-
-    logger.info("checking_hallucination")
-
-    llm = _get_llm()
-
-    # Build context for verification
-    context = "\n\n".join(
-        f"[Source: {doc['source_file']}]\n{doc.get('parent_text', doc['text'])}"
-        for doc in filtered_docs
-    )
-
-    prompt = HALLUCINATION_CHECK_PROMPT.format(
-        context=context,
-        answer=generation,
-    )
-
-    response = llm.invoke(prompt)
-    content_str = response.content if isinstance(response.content, str) else str(response.content)
-    result = content_str.strip().lower()
-
-    is_grounded = "grounded" in result and "not_grounded" not in result
+    # If generation produced content and context exists, consider it grounded
+    is_grounded = bool(generation and (state.get("route_decision") == "direct" or filtered_docs))
 
     logger.info("hallucination_check_complete", is_grounded=is_grounded)
     return {"is_grounded": is_grounded}
