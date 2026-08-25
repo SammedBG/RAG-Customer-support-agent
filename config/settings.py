@@ -123,6 +123,15 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
 
+    @field_validator("groq_chat_model")
+    @classmethod
+    def validate_groq_model(cls, v: str) -> str:
+        # If user has an old/decommissioned Groq model in Render env vars, auto-migrate to groq/compound
+        decommissioned = ["llama", "mixtral", "gemma"]
+        if any(d in v.lower() for d in decommissioned):
+            return "groq/compound"
+        return v
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
