@@ -12,9 +12,7 @@ export async function fetchDocuments(): Promise<DocumentItem[]> {
 export async function uploadDocument(file: File): Promise<DocumentItem> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await apiClient.post('/documents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const res = await apiClient.post('/documents', formData);
   return res.data;
 }
 

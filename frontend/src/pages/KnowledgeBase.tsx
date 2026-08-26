@@ -49,8 +49,10 @@ export default function KnowledgeBase() {
     try {
       await uploadDocument(files[0]);
       await loadDocs();
-    } catch (err) {
-      alert('Upload failed — backend is not connected.');
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      const detail = err.response?.data?.detail || err.message || 'Check backend connection.';
+      alert(`Upload failed: ${detail}`);
     }
     setIsUploading(false);
   };
@@ -59,8 +61,10 @@ export default function KnowledgeBase() {
     try {
       await deleteDocument(doc.id, doc.name);
       await loadDocs();
-    } catch (err) {
-      alert('Delete failed — backend is not connected.');
+    } catch (err: any) {
+      console.error('Delete failed:', err);
+      const detail = err.response?.data?.detail || err.message || 'Check backend connection.';
+      alert(`Delete failed: ${detail}`);
     }
   };
 
@@ -70,8 +74,10 @@ export default function KnowledgeBase() {
     try {
       await deleteAllDocuments();
       setDocuments([]);
-    } catch (err) {
-      alert('Failed to clear knowledge base — backend is not connected.');
+    } catch (err: any) {
+      console.error('Clear all failed:', err);
+      const detail = err.response?.data?.detail || err.message || 'Check backend connection.';
+      alert(`Failed to clear knowledge base: ${detail}`);
     }
     setIsClearing(false);
   };
@@ -80,8 +86,10 @@ export default function KnowledgeBase() {
     try {
       await reindexDocument(doc.id, doc.name);
       await loadDocs();
-    } catch (err) {
-      alert('Reindex failed — backend is not connected.');
+    } catch (err: any) {
+      console.error('Reindex failed:', err);
+      const detail = err.response?.data?.detail || err.message || 'Check backend connection.';
+      alert(`Reindex failed: ${detail}`);
     }
   };
 
