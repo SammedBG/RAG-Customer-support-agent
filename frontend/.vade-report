@@ -1,46 +1,51 @@
-## Vercel Web Analytics Implementation
+# Vercel Speed Insights Implementation
 
-Successfully implemented Vercel Web Analytics for this React + Vite project.
+Successfully installed and configured Vercel Speed Insights for this React + Vite project.
 
-### Changes Made
+## Changes Made
 
-**1. Package Installation**
-   - Installed `@vercel/analytics` version 2.0.1 using npm
-   - Package added to dependencies in package.json
+### 1. Package Installation
+- Installed `@vercel/speed-insights` package (v2.0.0) using npm
+- Package added to dependencies in `package.json`
+- Lock file (`package-lock.json`) updated with new dependency
 
-**2. Code Integration (src/App.tsx)**
-   - Added import statement: `import { Analytics } from '@vercel/analytics/react';`
-   - Added `<Analytics />` component at the end of the main app div, right after the CustomAgentModal
-   - Placement follows official Vercel documentation for React applications
+### 2. Code Integration
+**Modified: `frontend/src/App.tsx`**
+- Added import statement: `import { SpeedInsights } from '@vercel/speed-insights/react';`
+- Added `<SpeedInsights />` component alongside the existing `<Analytics />` component
+- Component placed inside the main app container, following React best practices
 
-**3. Files Modified**
-   - `package.json` - Added @vercel/analytics dependency
-   - `package-lock.json` - Updated with new dependency tree
-   - `src/App.tsx` - Added Analytics import and component
+## Implementation Details
 
-### Implementation Details
+### Framework Detection
+This project uses:
+- **Framework**: React 18.3.0
+- **Build Tool**: Vite 5.4.0
+- **Package Manager**: npm
 
-Following the latest official Vercel Analytics documentation (fetched from https://vercel.com/docs/analytics/quickstart), this implementation:
-- Uses the React-specific package export (`@vercel/analytics/react`)
-- Places the Analytics component at the root level of the application
-- Ensures analytics tracking across all routes managed by React Router
+### Documentation Reference
+Implementation followed the official Vercel Speed Insights Quickstart guide (https://vercel.com/docs/speed-insights/quickstart), specifically the React/Create React App instructions:
+- Used the `/react` entry point for the SpeedInsights import
+- Added the component to the root App component for global coverage
 
-### Verification
+### Placement Rationale
+The SpeedInsights component was placed:
+- At the root level of the application (App.tsx)
+- Next to the existing Analytics component for consistency
+- Inside the main BrowserRouter wrapper to track all route changes
 
-✅ Build completed successfully (`npm run build`)
-✅ TypeScript type checking passed with no errors
-✅ No build artifacts or cache files staged
+## Verification
 
-### Next Steps
+✅ **Build Test**: Successfully ran `npm run build` - project compiles without errors
+✅ **Package Installation**: Confirmed `@vercel/speed-insights` added to package.json dependencies
+✅ **Lock File**: package-lock.json updated with 291 new packages (transitive dependencies)
+✅ **Code Integration**: SpeedInsights component properly imported and rendered
 
-After deployment to Vercel:
-1. Analytics will automatically start tracking page views
-2. Data will appear in the Vercel dashboard after a few days of visitor activity
-3. The integration will add routes scoped at `/_vercel/insights/*`
-4. You can verify the setup by checking for Fetch/XHR requests to the analytics endpoint in browser Network tab
+## Next Steps
 
-### Notes
+Once deployed to Vercel, Speed Insights will:
+1. Automatically track Core Web Vitals (LCP, FID, CLS, FCP, TTFB, INP)
+2. Collect real user monitoring data
+3. Display performance metrics in the Vercel dashboard under Speed Insights section
 
-- The Analytics component is lightweight and won't impact application performance
-- It integrates seamlessly with React Router for automatic route tracking
-- No additional configuration is required - analytics will work out of the box when deployed to Vercel
+No additional configuration is required. The component will work seamlessly with the existing Vercel Analytics setup.
