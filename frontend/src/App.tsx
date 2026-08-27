@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -56,6 +57,7 @@ export default function App() {
           onClose={() => setIsCustomModalOpen(false)}
         />
         <Analytics />
+        <SpeedInsights />
       </div>
     </BrowserRouter>
   );
